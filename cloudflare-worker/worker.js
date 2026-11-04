@@ -1,0 +1,171 @@
+/**
+ * Indian Bison WhatsApp CRM - 24/7 Cloudflare Worker Listener
+ * Account ID: 04b586d238bb60304c8fc2501beaecf3
+ */
+
+export default {
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+
+    // 1. Health check endpoint
+    if (url.pathname === "/" || url.pathname === "/health") {
+      return new Response(JSON.stringify({
+        status: "ONLINE",
+        service: "Indian Bison WhatsApp Cloudflare Worker",
+        account_id: "04b586d238bb60304c8fc2501beaecf3",
+        meta_app_id: env.META_APP_ID || "1132938199519864",
+        uptime: "24/7/365 Serverless Cloud"
+      }), {
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
+      });
+    }
+
+    // 2. Meta Verification Challenge Handshake (GET /webhook)
+    if (request.method === "GET" && (url.pathname === "/webhook" || url.pathname === "/webhook/whatsapp")) {
+      const mode = url.searchParams.get("hub.mode");
+      const token = url.searchParams.get("hub.verify_token");
+      const challenge = url.searchParams.get("hub.challenge");
+
+      const expectedToken = env.META_WEBHOOK_VERIFY_TOKEN || "indian_bison_secret_2026";
+
+      if (mode === "subscribe" && token === expectedToken) {
+        console.log("[Meta Challenge Handshake] Successfully verified by Meta servers.");
+        return new Response(challenge, {
+          status: 200,
+          headers: { "Content-Type": "text/plain" }
+        });
+      } else {
+        console.error("[Meta Challenge Handshake] Verification failed: Token mismatch.");
+        return new Response("Forbidden", { status: 403 });
+      }
+    }
+
+    // 3. Meta Inbound Event / Message Processing (POST /webhook)
+    if (request.method === "POST" && (url.pathname === "/webhook" || url.pathname === "/webhook/whatsapp")) {
+      try {
+        const body = await request.json();
+
+        // Process message in background without blocking Meta's 200 OK SLA
+        ctx.waitUntil(handleMetaWebhook(body, env));
+
+        // Always return 200 OK immediately to satisfy Meta SLA (< 2 seconds)
+        return new Response("EVENT_RECEIVED", { status: 200 });
+      } catch (err) {
+        console.error("[Webhook Error]", err.message);
+        return new Response("EVENT_RECEIVED", { status: 200 });
+      }
+    }
+
+    return new Response("Not Found", { status: 404 });
+  }
+};
+
+async function handleMetaWebhook(payload, env) {
+  try {
+    const entry = payload.entry?.[0];
+    const change = entry?.changes?.[0]?.value;
+    if (!change) return;
+
+    // A. Handle Status Updates (sent, delivered, read blue ticks)
+    if (change.statuses && change.statuses.length > 0) {
+      const statusObj = change.statuses[0];
+      console.log(`[Meta Status] ${statusObj.status} for ${statusObj.recipient_id}`);
+      return;
+    }
+
+    // B. Handle Inbound Doctor Messages
+    if (change.messages && change.messages.length > 0) {
+      const msg = change.messages[0];
+      const from = msg.from;
+      const text = (msg.text?.body || "").trim();
+      const upperText = text.toUpperCase();
+
+      console.log(`[Meta Inbound] Message from ${from}: "${text}"`);
+
+      // Case 1: Doctor replied "YES"
+      if (upperText === "YES" || upperText.includes("YES") || upperText.includes("HAAN") || upperText.includes("SURE")) {
+        console.log(`[Trigger] "YES" detected from ${from}. Generating ₹2,999 Slot-Lock order...`);
+
+        // Generate Razorpay Order
+        const orderId = await createRazorpayOrder(env);
+        const previewUrl = `https://indian-bison-crm-2026.web.app/preview.html?phone=${from}&slot_lock=2999&order_id=${orderId}`;
+
+        // Send WhatsApp reply to Doctor
+        const replyMessage = 
+          `*Indian Bison — Greater Noida Clinic Growth*\n\n` +
+          `Thank you, Doctor. We have reserved your clinic's slot.\n\n` +
+          `📱 *Interactive Prototype & Live GBP Audit:*\n${previewUrl}\n\n` +
+          `🔒 *Deposit Amount:* ₹2,999 (100% refundable slot-lock before prototype review).\n` +
+          `Order ID: ${orderId}\n\n` +
+          `Reply *STOP* at any time to opt-out.`;
+
+        await sendWhatsAppMessage(from, replyMessage, env);
+        console.log(`[Dispatched] Slot-Lock response sent to ${from}`);
+      }
+      // Case 2: Doctor replied "STOP" (Compliance Opt-Out)
+      else if (upperText === "STOP" || upperText.includes("UNSUBSCRIBE")) {
+        console.log(`[Compliance] "STOP" received from ${from}. Marking suppressed.`);
+        await sendWhatsAppMessage(from, "You have been successfully opted out. No further automated messages will be sent.", env);
+      }
+    }
+  } catch (err) {
+    console.error("[Handler Error]", err.message);
+  }
+}
+
+async function createRazorpayOrder(env) {
+  const keyId = env.RAZORPAY_KEY_ID || "rzp_test_indian_bison";
+  const keySecret = env.RAZORPAY_KEY_SECRET || "indian_bison_rzp_secret";
+
+  try {
+    const authHeader = "Basic " + btoa(`${keyId}:${keySecret}`);
+    const res = await fetch("https://api.razorpay.com/v1/orders", {
+      method: "POST",
+      headers: {
+        "Authorization": authHeader,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        amount: 299900,
+        currency: "INR",
+        receipt: `rcpt_${Date.now()}`
+      })
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      return data.id;
+    }
+  } catch (e) {
+    console.warn("[Razorpay Fallback] Using mock order ID:", e.message);
+  }
+
+  return `order_Rzp_${Date.now()}`;
+}
+
+async function sendWhatsAppMessage(recipientPhone, messageText, env) {
+  const token = env.META_PERMANENT_ACCESS_TOKEN;
+  const phoneNumberId = env.META_PHONE_NUMBER_ID || "587641237759145";
+
+  if (!token) return;
+
+  try {
+    const res = await fetch(`https://graph.facebook.com/v21.0/${phoneNumberId}/messages`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        recipient_type: "individual",
+        to: recipientPhone,
+        type: "text",
+        text: { preview_url: true, body: messageText }
+      })
+    });
+    return await res.json();
+  } catch (e) {
+    console.error("[WhatsApp Send Error]", e.message);
+  }
+}

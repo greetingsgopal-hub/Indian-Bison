@@ -1,0 +1,13 @@
+name = "indian-bison-webhook"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+account_id = "04b586d238bb60304c8fc2501beaecf3"
+
+[vars]
+META_APP_ID = "1132938199519864"
+META_PHONE_NUMBER_ID = "587641237759145"
+META_WEBHOOK_VERIFY_TOKEN = "indian_bison_secret_2026"
+META_PERMANENT_ACCESS_TOKEN = "EAAQGZArrvUngBSZB8bBIJK2Ob5v52FBDJXU99JBscbXHqkdI0Auvj52pvxbD1w54Ov1WfCZAd0Vj87KoYmBNBCw8hZANeZCxU182pHLbQD9eCeWxy9NjlhBOMcgaNhq7SoK9qAgXAynkHbZCApJWRotk2vCJjpkMunpHb1eurEHX9xSCFehaZCpcYp5gtKvQ8MqFwj1TUPgtrFK2bvdhhZCpamVQZCEBRmfQUPLcD"
+RAZORPAY_KEY_ID = "rzp_test_indian_bison"
+RAZORPAY_KEY_SECRET = "indian_bison_rzp_secret"
+SLOT_LOCK_DEPOSIT_INR = "2999"
