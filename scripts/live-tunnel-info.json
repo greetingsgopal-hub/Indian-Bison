@@ -1,7 +1,10 @@
 {
-  "publicUrl": "https://basketball-sleeve-attention-simpson.trycloudflare.com",
-  "webhookCallbackUrl": "https://basketball-sleeve-attention-simpson.trycloudflare.com/webhook",
-  "streamUrl": "https://basketball-sleeve-attention-simpson.trycloudflare.com/api/funnel-stream",
-  "verifyToken": "indian_bison_secret_2026",
-  "startedAt": "2026-11-04T17:05:47.552Z"
+  "active": true,
+  "provider": "Cloudflare Workers (Edge Serverless 24/7/365)",
+  "account_id": "04b586d238bb60304c8fc2501beaecf3",
+  "worker_name": "indian-bison-webhook",
+  "public_url": "https://indian-bison-webhook.greetings-gopal.workers.dev",
+  "webhook_endpoint": "https://indian-bison-webhook.greetings-gopal.workers.dev/webhook",
+  "verify_token": "indian_bison_secret_2026",
+  "updated_at": "2026-11-05T00:18:25+05:30"
 }
