@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://indian-bison-crm-2026.web.app/sitemap.xml

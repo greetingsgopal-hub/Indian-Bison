@@ -1,0 +1,107 @@
+{
+  "validation_summary": {
+    "target_city": "Greater Noida",
+    "target_niche": "Dentists & Dental Clinics",
+    "total_prospects_scanned": 5,
+    "schema_completeness_pass": "5/5 (100%)",
+    "whatsapp_e164_pass": "5/5 (100%)",
+    "friction_verified_pass": "5/5 (100%)",
+    "hook_word_limit_pass": "5/5 (100% < 60 words)",
+    "opt_out_compliance_pass": "5/5 (100%)",
+    "status": "READY_FOR_OUTBOUND_PROCESSING"
+  },
+  "phase1_prospects": [
+    {
+      "id": "GN-DENT-001",
+      "business_name": "3 C Dental Clinic (3C Dental Center)",
+      "address_locality": "UGF-14, Eldeco Arcadia Shopping Complex, Sector Pi-1 / Phi-1, Greater Noida, UP 201310",
+      "rating": 3.7,
+      "total_reviews": 46,
+      "phone_whatsapp": "+918130472244",
+      "website_url": "MISSING_WEBSITE",
+      "key_friction_point": "Sliding 3.7★ rating with 1-2★ reviews citing walk-in wait times, unconfirmed visiting specialist schedules, and zero website link."
+    },
+    {
+      "id": "GN-DENT-002",
+      "business_name": "Dr. Suman Singh Dental Health Clinic",
+      "address_locality": "A-3, Near Gate No. 1, Edana Apartment, Sector Alpha-1, Greater Noida, UP 201310",
+      "rating": 4.1,
+      "total_reviews": 38,
+      "phone_whatsapp": "+919953044628",
+      "website_url": "http://sumandentalhealthclinic.com (BROKEN_SSL_HTTP)",
+      "key_friction_point": "Unsecure HTTP link triggering browser warnings + 4.1★ rating with negative feedback on evening OPD timing confusion."
+    },
+    {
+      "id": "GN-DENT-003",
+      "business_name": "Mouth Matters (The Dental Centre)",
+      "address_locality": "Shop No. 42, Kadamba Shopping Complex, Sector Gamma-1, Greater Noida, UP 201308",
+      "rating": 4.2,
+      "total_reviews": 64,
+      "phone_whatsapp": "+919889085093",
+      "website_url": "http://mouthmatters.yolasite.com (ABANDONED_FREE_SUBDOMAIN)",
+      "key_friction_point": "Abandoned free Yolasite subdomain lacking mobile booking + 4.2★ rating with patient friction around aligner pricing/scheduling."
+    },
+    {
+      "id": "GN-DENT-004",
+      "business_name": "Muskan Dental Clinic (Dr. Gautam Kumar)",
+      "address_locality": "Shop No. 215, 2nd Floor, Om Tower, Alpha-1 Commercial Belt, Greater Noida, UP 201310",
+      "rating": 4.4,
+      "total_reviews": 520,
+      "phone_whatsapp": "+919873206739",
+      "website_url": "MISSING_WEBSITE",
+      "key_friction_point": "High-authority local clinic (520+ reviews) with MISSING_WEBSITE and waiting room bottlenecks in Alpha-1 Commercial Belt."
+    },
+    {
+      "id": "GN-DENT-005",
+      "business_name": "The Dentist Multispeciality Dental Clinic (Dr. Nakul Motla)",
+      "address_locality": "Sector Beta-2 Market, Greater Noida, UP 201308",
+      "rating": 4.9,
+      "total_reviews": 1020,
+      "phone_whatsapp": "+919289992022",
+      "website_url": "MISSING_WEBSITE",
+      "key_friction_point": "1,020+ reviews with MISSING_WEBSITE; relies on manual phone booking causing front-desk call congestion during peak OPD hours."
+    }
+  ],
+  "phase2_hooks": [
+    {
+      "id": "GN-DENT-001",
+      "business_name": "3 C Dental Clinic (3C Dental Center)",
+      "hook_type": "Pain-First + Peer Social Proof + Low-Friction Micro-Offer (Audio + Prototype Fix)",
+      "word_count": 53,
+      "whatsapp_message": "Hey Dr. Abhinav, I noticed 3C Dental Clinic on Google Maps has no website link and walk-in wait-time reviews pulling your rating to 3.7★.\n\nWe helped two Greater Noida clinics fix this leak to recover 4.8★ ratings and boost walk-ins.\n\nOpen to a 1-minute audio breakdown and free prototype fix?\n(Reply STOP to opt out)",
+      "opt_out_sentence": "(Reply STOP to opt out)"
+    },
+    {
+      "id": "GN-DENT-002",
+      "business_name": "Dr. Suman Singh Dental Health Clinic",
+      "hook_type": "Pain-First + Peer Social Proof + Low-Friction Micro-Offer (1-Min Custom Audio)",
+      "word_count": 55,
+      "whatsapp_message": "Hey Dr. Suman, your Alpha-1 Google Maps listing currently links to an unsecure HTTP page that shows a browser warning, and reviews mention evening timing confusion.\n\nOther Greater Noida dental clinics fixed this exact leak to double their mobile calls.\n\nOpen to a quick 1-minute custom audio breakdown of how to patch it today?\n(Reply STOP to opt out)",
+      "opt_out_sentence": "(Reply STOP to opt out)"
+    },
+    {
+      "id": "GN-DENT-003",
+      "business_name": "Mouth Matters (The Dental Centre)",
+      "hook_type": "Pain-First + Peer Social Proof + Low-Friction Micro-Offer (Free Prototype Fix)",
+      "word_count": 56,
+      "whatsapp_message": "Hey Mouth Matters Team, your Gamma-1 Google listing still points to an old Yolasite subdomain, which leaks high-value aligner patients before they ever call.\n\nSimilar dental centers in Greater Noida switched to instant WhatsApp booking pages to capture 3x more walk-ins.\n\nCan I share a free prototype fix I mocked up for your clinic?\n(Reply STOP to opt out)",
+      "opt_out_sentence": "(Reply STOP to opt out)"
+    },
+    {
+      "id": "GN-DENT-004",
+      "business_name": "Muskan Dental Clinic (Dr. Gautam Kumar)",
+      "hook_type": "Peer Social Proof + Pain-First + Low-Friction Micro-Offer (1-Min Custom Audio)",
+      "word_count": 55,
+      "whatsapp_message": "Hey Dr. Gautam, Muskan Dental Clinic has 520+ reviews in Alpha-1, but having no website link on Google Maps lets nearby corporate chains siphon off your high-intent search traffic.\n\nWe helped similar Greater Noida practices plug this leak and automate slot booking.\n\nOpen to a 1-minute custom audio breakdown of the fix?\n(Reply STOP to opt out)",
+      "opt_out_sentence": "(Reply STOP to opt out)"
+    },
+    {
+      "id": "GN-DENT-005",
+      "business_name": "The Dentist Multispeciality Dental Clinic (Dr. Nakul Motla)",
+      "hook_type": "Low-Friction Micro-Offer (Free Prototype) + Pain-First + Peer Social Proof",
+      "word_count": 56,
+      "whatsapp_message": "Hey Dr. Nakul, with 1,000+ reviews in Beta-2, having no website or self-serve booking link on Google Maps forces every patient to call your busy front desk.\n\nHigh-volume Greater Noida clinics use our WhatsApp slot assistant to capture missed walk-ins automatically.\n\nOpen to seeing a free prototype fix built for your clinic?\n(Reply STOP to opt out)",
+      "opt_out_sentence": "(Reply STOP to opt out)"
+    }
+  ]
+}

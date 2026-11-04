@@ -1,0 +1,12 @@
+{
+  "app_name_ios": "Indian Bison: Local Lead CRM",
+  "subtitle_ios": "WhatsApp Outreach & ₹ Quotes",
+  "title_google_play": "Indian Bison: WhatsApp & CRM",
+  "short_description_google_play": "Turn Google Maps clinic leaks into ₹9.5k–₹38k deals with 1-click WhatsApp CRM.",
+  "promotional_text_ios": "Close ₹14.41L+ in local clinic retainers. Audit Google Maps leaks, switch between 4 PAS WhatsApp hooks (<60 words), and send instant ₹ INR quotes in 1 click.",
+  "keywords_ios": "whatsapp,crm,leads,quotation,invoice,dental,b2b,outreach,sales,local,seo,india,agency,maps,dialer",
+  "version": "2.4.0",
+  "category": "Business / Productivity",
+  "region": "IN (asia-south2 Delhi NCR)",
+  "release_notes": "Added NCR Market-Benchmarked ₹ INR Quotation Studio (Alt+Q), <60-word PAS WhatsApp Hook Switcher, PostHog/GA4 conversion telemetry, and real-time Cloud Firestore sync."
+}

@@ -1,0 +1,17 @@
+{
+  "name": "indian-bison-functions",
+  "version": "1.0.0",
+  "description": "Indian Bison 24/7 Meta WhatsApp Webhook & Funnel Automation Engine",
+  "main": "index.js",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "firebase-admin": "^13.0.0",
+    "firebase-functions": "^6.0.0"
+  },
+  "engines": {
+    "node": "20"
+  },
+  "private": true
+}

@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Local Growth & WhatsApp Outreach CRM — Greater Noida</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+</head>
+<body class="bg-[var(--background)] text-[var(--foreground)] antialiased p-6">
+
+  <!-- Top Header & Actions -->
+  <div class="max-w-7xl mx-auto space-y-6">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm">
+      <div>
+        <div class="flex items-center gap-2.5">
+          <span class="px-2.5 py-1 rounded-md text-xs font-semibold bg-[var(--primary)] text-[var(--primary-foreground)]">LIVE CAMPAIGN</span>
+          <span class="text-xs font-medium text-[var(--muted-foreground)]">Greater Noida • Dentists & Dental Clinics</span>
+        </div>
+        <h1 class="text-xl font-bold text-[var(--foreground)] mt-1.5">Local Lead Engine & WhatsApp Conversion CRM</h1>
+        <p class="text-sm text-[var(--muted-foreground)]">Manage scraped Google Maps prospects, switch psychological hooks, validate &lt;60-word compliance, and launch 1-click WhatsApp outreach.</p>
+      </div>
+      <div class="flex flex-wrap items-center gap-2.5">
+        <button onclick="openAddModal()" class="px-3.5 py-2 rounded-lg text-xs font-semibold border border-[var(--border)] bg-[var(--secondary)] text-[var(--secondary-foreground)] hover:opacity-90 transition">
+          + Add Prospect
+        </button>
+        <button onclick="exportCSV()" class="px-3.5 py-2 rounded-lg text-xs font-semibold border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] hover:bg-[var(--secondary)] transition">
+          Export CSV
+        </button>
+        <button onclick="exportJSON()" class="px-3.5 py-2 rounded-lg text-xs font-semibold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90 transition">
+          Export JSON
+        </button>
+      </div>
+    </div>
+
+    <!-- KPI Metrics Strip -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 shadow-sm">
+        <p class="text-xs font-medium text-[var(--muted-foreground)]">Total Hot Leads</p>
+        <p id="kpi-total" class="text-2xl font-bold text-[var(--foreground)] mt-1">20</p>
+        <p class="text-xs text-[var(--muted-foreground)] mt-1">0 corporate chains</p>
+      </div>
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 shadow-sm">
+        <p class="text-xs font-medium text-[var(--muted-foreground)]">Missing / Broken Web</p>
+        <p id="kpi-missing-web" class="text-2xl font-bold text-amber-500 mt-1">15</p>
+        <p class="text-xs text-[var(--muted-foreground)] mt-1">High-ticket web leaks</p>
+      </div>
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 shadow-sm">
+        <p class="text-xs font-medium text-[var(--muted-foreground)]">1★–2★ Friction Leads</p>
+        <p id="kpi-friction" class="text-2xl font-bold text-rose-500 mt-1">17</p>
+        <p class="text-xs text-[var(--muted-foreground)] mt-1">Booking / wait bottlenecks</p>
+      </div>
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 shadow-sm">
+        <p class="text-xs font-medium text-[var(--muted-foreground)]">WhatsApp Sent</p>
+        <p id="kpi-sent" class="text-2xl font-bold text-sky-500 mt-1">0</p>
+        <p class="text-xs text-[var(--muted-foreground)] mt-1">Outreach initiated</p>
+      </div>
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 shadow-sm">
+        <p class="text-xs font-medium text-[var(--muted-foreground)]">Replied / Audit Sent</p>
+        <p id="kpi-replied" class="text-2xl font-bold text-indigo-500 mt-1">0</p>
+        <p class="text-xs text-[var(--muted-foreground)] mt-1">Warm conversations</p>
+      </div>
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 shadow-sm">
+        <p class="text-xs font-medium text-[var(--muted-foreground)]">Booked / Closed</p>
+        <p id="kpi-booked" class="text-2xl font-bold text-emerald-500 mt-1">0</p>
+        <p class="text-xs text-[var(--muted-foreground)] mt-1">Active deals won</p>
+      </div>
+    </div>
+
+    <!-- Filter & Search Controls -->
+    <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 shadow-sm flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between">
+      <div class="flex flex-1 flex-wrap items-center gap-3">
+        <div class="relative flex-1 min-w-[220px]">
+          <input
+            id="search-input"
+            type="text"
+            oninput="renderLeads()"
+            placeholder="Search clinic, doctor, sector (e.g. Alpha-1, Jagat Farm, Gaur City)..."
+            class="w-full px-3.5 py-2 rounded-lg text-sm bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+          />
+        </div>
+
+        <select id="filter-tier" onchange="renderLeads()" class="px-3 py-2 rounded-lg text-xs font-medium bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)]">
+          <option value="ALL">All Urgency Tiers</option>
+          <option value="Tier 1">Tier 1: Critical / High (Score 87–98)</option>
+          <option value="Tier 2">Tier 2: High Opportunity (Score 76–85)</option>
+          <option value="Tier 3">Tier 3: Booking Friction (Score 65–74)</option>
+        </select>
+
+        <select id="filter-web" onchange="renderLeads()" class="px-3 py-2 rounded-lg text-xs font-medium bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)]">
+          <option value="ALL">All Website States</option>
+          <option value="MISSING">Missing Website Only</option>
+          <option value="BROKEN">Broken / Free Subdomain / PBX</option>
+          <option value="HAS_WEB">Has Static Website</option>
+        </select>
+
+        <select id="filter-status" onchange="renderLeads()" class="px-3 py-2 rounded-lg text-xs font-medium bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)]">
+          <option value="ALL">All Pipeline Stages</option>
+          <option value="Not Contacted">Not Contacted</option>
+          <option value="WhatsApp Sent">WhatsApp Sent</option>
+          <option value="Replied">Replied</option>
+          <option value="Prototype Sent">Prototype / Audio Sent</option>
+          <option value="Booked">Booked / Won</option>
+          <option value="Opted Out">Opted Out (STOP)</option>
+        </select>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-medium text-[var(--muted-foreground)]">Global Hook Preset:</span>
+        <select id="global-hook-mode" onchange="applyGlobalHook(this.value)" class="px-3 py-2 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)]">
+          <option value="default">Default Value-First</option>
+          <option value="pain">Pain-First Hook</option>
+          <option value="social">Peer Social Proof Hook</option>
+          <option value="micro">Low-Friction Micro-Offer</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Main Split Layout: Lead Table + Active Lead Outreach Composer -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      
+      <!-- Left 7 Cols: Ranked Prospect List -->
+      <div class="lg:col-span-7 space-y-3">
+        <div class="flex items-center justify-between px-1">
+          <h2 class="text-sm font-semibold text-[var(--foreground)]">Filtered Prospects (<span id="filtered-count">20</span>)</h2>
+          <button onclick="resetProgress()" class="text-xs text-[var(--muted-foreground)] hover:underline">Reset Saved Statuses</button>
+        </div>
+        <div id="leads-container" class="space-y-3"></div>
+      </div>
+
+      <!-- Right 5 Cols: Sticky WhatsApp Hook Studio & Compliance Inspector -->
+      <div class="lg:col-span-5 lg:sticky lg:top-6 bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm space-y-4">
+        <div class="flex items-start justify-between gap-2 border-b border-[var(--border)] pb-3.5">
+          <div>
+            <span id="inspector-rank" class="px-2 py-0.5 rounded text-xs font-bold bg-[var(--primary)] text-[var(--primary-foreground)]">RANK #1</span>
+            <h3 id="inspector-name" class="text-base font-bold text-[var(--foreground)] mt-1">Select a Prospect</h3>
+            <p id="inspector-meta" class="text-xs text-[var(--muted-foreground)]"></p>
+          </div>
+          <select id="inspector-status" onchange="updateActiveLeadStatus(this.value)" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)]">
+            <option value="Not Contacted">Not Contacted</option>
+            <option value="WhatsApp Sent">WhatsApp Sent</option>
+            <option value="Replied">Replied</option>
+            <option value="Prototype Sent">Prototype / Audio Sent</option>
+            <option value="Booked">Booked / Won</option>
+            <option value="Opted Out">Opted Out (STOP)</option>
+          </select>
+        </div>
+
+        <!-- Audit Details -->
+        <div class="space-y-2 text-xs bg-[var(--background)] p-3.5 rounded-lg border border-[var(--border)]">
+          <div class="flex justify-between">
+            <span class="text-[var(--muted-foreground)]">Recipient / Doctor:</span>
+            <span id="inspector-recipient" class="font-semibold text-[var(--foreground)]"></span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-[var(--muted-foreground)]">WhatsApp Phone:</span>
+            <span id="inspector-phone" class="font-mono font-semibold text-emerald-500"></span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-[var(--muted-foreground)]">Website Audit:</span>
+            <span id="inspector-web" class="font-semibold"></span>
+          </div>
+          <div class="pt-1 border-t border-[var(--border)]">
+            <span class="text-[var(--muted-foreground)] block mb-0.5">Observed GBP Operational Friction:</span>
+            <p id="inspector-friction" class="text-[var(--foreground)] font-medium leading-relaxed"></p>
+          </div>
+          <div class="pt-1 border-t border-[var(--border)]">
+            <span class="text-[var(--muted-foreground)] block mb-0.5">Recommended Growth Solution:</span>
+            <p id="inspector-pitch" class="text-[var(--foreground)] leading-relaxed"></p>
+          </div>
+        </div>
+
+        <!-- Psychological Hook Selector -->
+        <div>
+          <label class="block text-xs font-semibold text-[var(--foreground)] mb-2">Select Psychological Hook Trigger:</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="selectHookVariant('default')" id="btn-hook-default" class="px-3 py-2 rounded-lg text-xs font-medium border border-[var(--border)] text-left transition">
+              <div class="font-semibold">1. Value-First (Default)</div>
+              <div class="text-xs text-[var(--muted-foreground)]">Direct GBP gap + soft CTA</div>
+            </button>
+            <button onclick="selectHookVariant('pain')" id="btn-hook-pain" class="px-3 py-2 rounded-lg text-xs font-medium border border-[var(--border)] text-left transition">
+              <div class="font-semibold">2. Pain-First Hook</div>
+              <div class="text-xs text-[var(--muted-foreground)]">Highlights lost walk-ins</div>
+            </button>
+            <button onclick="selectHookVariant('social')" id="btn-hook-social" class="px-3 py-2 rounded-lg text-xs font-medium border border-[var(--border)] text-left transition">
+              <div class="font-semibold">3. Peer Social Proof</div>
+              <div class="text-xs text-[var(--muted-foreground)]">Local NCR clinic benchmark</div>
+            </button>
+            <button onclick="selectHookVariant('micro')" id="btn-hook-micro" class="px-3 py-2 rounded-lg text-xs font-medium border border-[var(--border)] text-left transition">
+              <div class="font-semibold">4. Micro-Offer Hook</div>
+              <div class="text-xs text-[var(--muted-foreground)]">1-min audio / prototype fix</div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Live Message Editor & Validation Bar -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="text-xs font-semibold text-[var(--foreground)]">WhatsApp Message Composer</label>
+            <div class="flex items-center gap-2">
+              <span id="badge-word-count" class="px-2 py-0.5 rounded text-xs font-semibold">53 / 60 words</span>
+              <span id="badge-opt-out" class="px-2 py-0.5 rounded text-xs font-semibold">STOP Opt-Out ✓</span>
+            </div>
+          </div>
+          <textarea
+            id="inspector-message"
+            rows="6"
+            oninput="validateComposer()"
+            class="w-full p-3 rounded-lg text-sm bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] leading-relaxed"
+          ></textarea>
+        </div>
+
+        <!-- Notes Field -->
+        <div>
+          <label class="block text-xs font-semibold text-[var(--foreground)] mb-1">CRM Call / Follow-Up Notes</label>
+          <input
+            id="inspector-notes"
+            type="text"
+            oninput="saveActiveNote(this.value)"
+            placeholder="Add follow-up date, owner objection, or prototype link..."
+            class="w-full px-3 py-2 rounded-lg text-xs bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)]"
+          />
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="grid grid-cols-2 gap-3 pt-1">
+          <button onclick="copyActiveMessage()" id="btn-copy-msg" class="px-4 py-2.5 rounded-lg text-xs font-semibold border border-[var(--border)] bg-[var(--secondary)] text-[var(--secondary-foreground)] hover:opacity-90 transition">
+            Copy Message Text
+          </button>
+          <button onclick="launchWhatsApp()" class="px-4 py-2.5 rounded-lg text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-500 transition flex items-center justify-center gap-1.5">
+            <span>Launch WhatsApp Chat</span>
+            <span>↗</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Add Prospect Modal -->
+  <div id="add-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
+    <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl max-w-lg w-full p-5 space-y-4 shadow-xl">
+      <div class="flex items-center justify-between border-b border-[var(--border)] pb-3">
+        <h3 class="text-base font-bold text-[var(--foreground)]">Add New Local Business Prospect</h3>
+        <button onclick="closeAddModal()" class="text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)]">✕</button>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+        <div class="sm:col-span-2">
+          <label class="block font-semibold mb-1">Business Name *</label>
+          <input id="new-name" type="text" placeholder="e.g. Apex Dental Studio" class="w-full px-3 py-2 rounded-lg bg-[var(--background)] border border-[var(--border)]" />
+        </div>
+        <div>
+          <label class="block font-semibold mb-1">Doctor / Recipient Name</label>
+          <input id="new-recipient" type="text" placeholder="e.g. Dr. Rohan" class="w-full px-3 py-2 rounded-lg bg-[var(--background)] border border-[var(--border)]" />
+        </div>
+        <div>
+          <label class="block font-semibold mb-1">WhatsApp Phone (+91...) *</label>
+          <input id="new-phone" type="text" placeholder="+919876543210" class="w-full px-3 py-2 rounded-lg bg-[var(--background)] border border-[var(--border)]" />
+        </div>
+        <div>
+          <label class="block font-semibold mb-1">Locality / Sector *</label>
+          <input id="new-locality" type="text" placeholder="e.g. Sector Alpha-1, Greater Noida" class="w-full px-3 py-2 rounded-lg bg-[var(--background)] border border-[var(--border)]" />
+        </div>
+        <div>
+          <label class="block font-semibold mb-1">Website URL or MISSING_WEBSITE</label>
+          <input id="new-web" type="text" value="MISSING_WEBSITE" class="w-full px-3 py-2 rounded-lg bg-[var(--background)] border border-[var(--border)]" />
+        </div>
+        <div>
+          <label class="block font-semibold mb-1">Rating (1.0 - 5.0)</label>
+          <input id="new-rating" type="number" step="0.1" value="4.1" class="w-full px-3 py-2 rounded-lg bg-[var(--background)] border border-[var(--border)]" />
+        </div>
+        <div>
+          <label class="block font-semibold mb-1">Total Reviews</label>
+          <input id="new-reviews" type="number" value="45" class="w-full px-3 py-2 rounded-lg bg-[var(--background)] border border-[var(--border)]" />
+        </div>
+        <div class="sm:col-span-2">
+          <label class="block font-semibold mb-1">Key GBP Friction Point *</label>
+          <input id="new-friction" type="text" placeholder="e.g. Missing website link and 1-2 star reviews citing walk-in delays" class="w-full px-3 py-2 rounded-lg bg-[var(--background)] border border-[var(--border)]" />
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeAddModal()" class="px-4 py-2 rounded-lg text-xs font-semibold border border-[var(--border)]">Cancel</button>
+        <button onclick="saveNewProspect()" class="px-4 py-2 rounded-lg text-xs font-semibold bg-[var(--primary)] text-[var(--primary-foreground)]">Save Prospect</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const INITIAL_LEADS = [
+      {
+        rank: 1,
+        urgency_tier: "Tier 1",
+        urgency_score: 98,
+        business_name: "3 C Dental Clinic (3C Dental Center)",
+        recipient: "Dr. Abhinav",
+        sub_category: "Oral Surgery, Pediatric & Cosmetic Dentistry",
+        locality: "Sector Pi-1 / Phi-1, Eldeco Arcadia, Greater Noida",
+        rating: 3.7,
+        total_reviews: 46,
+        phone_whatsapp: "+918130472244",
+        website_url: "MISSING_WEBSITE",
+        operational_friction: true,
+        friction_details: "Sliding 3.7★ rating; 1-2★ reviews cite unconfirmed walk-in wait times, visiting specialist schedule confusion, and no online booking.",
+        recommended_pitch: "Automated WhatsApp appointment confirmation + GBP rating recovery workflow + high-converting 1-page clinic website.",
+        pain_short: "no website link and walk-in wait-time reviews pulling your rating to 3.7★",
+        fix_short: "automated WhatsApp slot booking and rating recovery"
+      },
+      {
+        rank: 2,
+        urgency_tier: "Tier 1",
+        urgency_score: 94,
+        business_name: "Dr. Suman Singh Dental Health Clinic",
+        recipient: "Dr. Suman",
+        sub_category: "Endodontics (RCT) & General Dentistry",
+        locality: "A-3, Edana Apartment, Sector Alpha-1, Greater Noida",
+        rating: 4.1,
+        total_reviews: 38,
+        phone_whatsapp: "+919953044628",
+        website_url: "http://sumandentalhealthclinic.com (BROKEN_SSL)",
+        operational_friction: true,
+        friction_details: "Unsecure HTTP website triggers browser warnings; 4.1★ rating with negative feedback on evening OPD timing confusion.",
+        recommended_pitch: "SSL website modernization + missed-call-to-WhatsApp auto-responder + automated post-visit review requests.",
+        pain_short: "an unsecure HTTP website warning and reviews mentioning evening OPD timing confusion",
+        fix_short: "a fast SSL mobile page and instant WhatsApp slot confirmation"
+      },
+      {
+        rank: 3,
+        urgency_tier: "Tier 1",
+        urgency_score: 92,
+        business_name: "Mouth Matters (The Dental Centre)",
+        recipient: "Mouth Matters Team",
+        sub_category: "Adult Orthodontics, Aligners & Restorative",
+        locality: "Shop 42, Kadamba Complex, Sector Gamma-1, Greater Noida",
+        rating: 4.2,
+        total_reviews: 64,
+        phone_whatsapp: "+919889085093",
+        website_url: "http://mouthmatters.yolasite.com (ABANDONED_SUBDOMAIN)",
+        operational_friction: true,
+        friction_details: "Outdated free Yolasite subdomain on profile; hard-to-find aligner pricing info and manual phone-only scheduling.",
+        recommended_pitch: "Replace legacy Yolasite subdomain with custom domain + interactive aligner/RCT booking funnel.",
+        pain_short: "an outdated Yolasite subdomain link without direct aligner or RCT slot booking",
+        fix_short: "a dedicated mobile booking page that converts aligner searches into calls"
+      },
+      {
+        rank: 4,
+        urgency_tier: "Tier 1",
+        urgency_score: 90,
+        business_name: "Muskan Dental Clinic",
+        recipient: "Dr. Gautam",
+        sub_category: "Crowns, Bridges & Implants",
+        locality: "Om Tower, Alpha-1 Commercial Belt, Greater Noida",
+        rating: 4.4,
+        total_reviews: 520,
+        phone_whatsapp: "+919873206739",
+        website_url: "MISSING_WEBSITE",
+        operational_friction: true,
+        friction_details: "520+ directory ratings in Alpha-1 but zero dedicated website; 1-2★ reviews note long waiting room delays.",
+        recommended_pitch: "Dedicated brand website + WhatsApp queue/slot manager to defend against nearby corporate chains.",
+        pain_short: "500+ great reviews in Alpha-1 but no website link or online slot booking",
+        fix_short: "a dedicated clinic site and automated WhatsApp slot scheduling"
+      },
+      {
+        rank: 5,
+        urgency_tier: "Tier 1",
+        urgency_score: 89,
+        business_name: "The Dentist Multispeciality Dental Clinic",
+        recipient: "Dr. Nakul",
+        sub_category: "Multispeciality Dentistry, RCT & Implants",
+        locality: "Sector Beta-2, Greater Noida",
+        rating: 4.9,
+        total_reviews: 1020,
+        phone_whatsapp: "+919289992022",
+        website_url: "MISSING_WEBSITE",
+        operational_friction: true,
+        friction_details: "High patient volume (1,020+ reviews) causes front-desk phone bottlenecks; no owned website.",
+        recommended_pitch: "Flagship digital clinic portal + automated WhatsApp slot scheduling to eliminate front-desk phone overload.",
+        pain_short: "1,000+ Beta-2 reviews but no website or self-serve booking link to ease front-desk calls",
+        fix_short: "automated WhatsApp slot booking that cuts reception call bottlenecks"
+      },
+      {
+        rank: 6,
+        urgency_tier: "Tier 1",
+        urgency_score: 87,
+        business_name: "Smile of India Dental Clinic & Implant Center",
+        recipient: "Smile of India Team",
+        sub_category: "Implantology & Family Dentistry",
+        locality: "Greater Noida",
+        rating: 4.2,
+        total_reviews: 41,
+        phone_whatsapp: "+919711157741",
+        website_url: "https://smile-of-india.localo.site (PLACEHOLDER)",
+        operational_friction: true,
+        friction_details: "Uses auto-generated Localo placeholder card; 4.2★ rating with complaints on fee clarity and slow callbacks.",
+        recommended_pitch: "Upgrade from generic Localo placeholder to custom dental implant landing page + instant WhatsApp capture.",
+        pain_short: "a generic Localo placeholder link and reviews mentioning slow inquiry callbacks",
+        fix_short: "a custom implant booking page with instant WhatsApp lead capture"
+      },
+      {
+        rank: 7,
+        urgency_tier: "Tier 2",
+        urgency_score: 85,
+        business_name: "Aggarwal Dentals Clinic",
+        recipient: "Aggarwal Dentals Team",
+        sub_category: "General & Preventive Family Dentistry",
+        locality: "Sector Beta-1, Greater Noida",
+        rating: 4.9,
+        total_reviews: 88,
+        phone_whatsapp: "+919899937440",
+        website_url: "MISSING_WEBSITE",
+        operational_friction: false,
+        friction_details: "Relies on phone calls for timing checks; zero online presence outside third-party directory listings.",
+        recommended_pitch: "Local SEO website + WhatsApp click-to-book integration to capture Beta-1 family searches.",
+        pain_short: "a 4.9★ rating in Beta-1 but no website or online service menu link",
+        fix_short: "a fast mobile booking page so Beta-1 families can book instantly"
+      },
+      {
+        rank: 8,
+        urgency_tier: "Tier 2",
+        urgency_score: 84,
+        business_name: "32 Dentz Clinic",
+        recipient: "32 Dentz Team",
+        sub_category: "Multispeciality & Full-Mouth Rehabilitation",
+        locality: "UGF 39, Omaxe Arcade, Near Pari Chowk, Omega-1",
+        rating: 4.8,
+        total_reviews: 95,
+        phone_whatsapp: "+918210561224",
+        website_url: "MISSING_WEBSITE",
+        operational_friction: true,
+        friction_details: "Reviewers cite difficulty locating exact shop entrance/parking in Omaxe Arcade; missing website.",
+        recommended_pitch: "Custom clinic website with Pari Chowk landmark guide + automated WhatsApp location pin sender.",
+        pain_short: "no website link and reviews mentioning trouble finding your exact entrance in Omaxe Arcade",
+        fix_short: "a mobile booking page that auto-sends WhatsApp directions and parking pins"
+      },
+      {
+        rank: 9,
+        urgency_tier: "Tier 2",
+        urgency_score: 83,
+        business_name: "Eugenics Dental Clinic",
+        recipient: "Eugenics Dental Team",
+        sub_category: "Sterilization-Focused General & Cosmetic",
+        locality: "Opp. Rampur Market, Sector Beta-2, Greater Noida",
+        rating: 4.6,
+        total_reviews: 54,
+        phone_whatsapp: "+918971372986",
+        website_url: "MISSING_WEBSITE",
+        operational_friction: true,
+        friction_details: "1-2★ feedback mentions unannounced evening closures and inability to check live doctor timings online.",
+        recommended_pitch: "GBP hours optimization + standalone clinic website with real-time WhatsApp appointment calendar.",
+        pain_short: "no website link and reviews mentioning unconfirmed evening OPD hours in Beta-2",
+        fix_short: "live WhatsApp slot booking so patients confirm timings before walking in"
+      },
+      {
+        rank: 10,
+        urgency_tier: "Tier 2",
+        urgency_score: 82,
+        business_name: "M.S Dental Clinic Implant & Braces Centre",
+        recipient: "M.S Dental Team",
+        sub_category: "Dental Implants & Orthodontic Braces",
+        locality: "Mukhiya Jee Plaza, Sector Pi-1, Accher, Greater Noida",
+        rating: 4.9,
+        total_reviews: 58,
+        phone_whatsapp: "+919667737010",
+        website_url: "MISSING_WEBSITE",
+        operational_friction: false,
+        friction_details: "No website or online smile gallery for high-ticket implant and braces cases.",
+        recommended_pitch: "High-ticket Implant & Braces portfolio website + automated WhatsApp treatment brochure sender.",
+        pain_short: "a 4.9★ rating in Sector Pi-1 but no website showcasing your implant and braces cases",
+        fix_short: "a mobile smile gallery page with instant WhatsApp consultation booking"
+      },
+      {
+        rank: 11,
+        urgency_tier: "Tier 2",
+        urgency_score: 80,
+        business_name: "Family Dental Clinic",
+        recipient: "Family Dental Team",
+        sub_category: "General & Pediatric Family Dentistry",
+        locality: "Sector Alpha-2, Greater Noida",
+        rating: 4.9,
+        total_reviews: 134,
+        phone_whatsapp: "+919311823735",
+        website_url: "MISSING_WEBSITE",
+        operational_friction: true,
+        friction_details: "Uses third-party SmartCare aggregator link instead of an owned domain; peak-hour waiting complaints.",
+        recommended_pitch: "Independent clinic website to stop leaking leads to aggregators + automated WhatsApp reminder system.",
+        pain_short: "no independent clinic website in Alpha-2 and reviews noting peak-hour wait times",
+        fix_short: "an owned clinic booking page with automated WhatsApp slot reminders"
+      },
+      {
+        rank: 12,
+        urgency_tier: "Tier 2",
+        urgency_score: 79,
+        business_name: "Krishna Dental Clinic & Implant Centre",
+        recipient: "Krishna Dental Team",
+        sub_category: "Implantology & Oral Healthcare",
+        locality: "Alpha-1 / Aicher Market, Greater Noida",
+        rating: 4.8,
+        total_reviews: 215,
+        phone_whatsapp: "+919354433497",
+        website_url: "MISSING_WEBSITE (Instagram Only)",
+        operational_friction: true,
+        friction_details: "Links only to Instagram; multiple local branches cause patient confusion on doctor OPD timings.",
+        recommended_pitch: "Multi-location clinic website with branch-specific doctor schedule selector + WhatsApp routing.",
+        pain_short: "only an Instagram link on Google Maps, causing timing confusion across your branches",
+        fix_short: "a multi-branch mobile booking page that routes WhatsApp appointments automatically"
+      },
+      {
+        rank: 13,
+        urgency_tier: "Tier 2",
+        urgency_score: 78,
+        business_name: "Cosmozone Clinic (Dental & Aesthetics)",
+        recipient: "Cosmozone Team",
+        sub_category: "Cosmetic Dentistry & Aesthetic Care",
+        locality: "Omaxe Arcade, Near Pari Chowk, Sector Omega-1",
+        rating: 4.7,
+        total_reviews: 49,
+        phone_whatsapp: "+919891812068",
+        website_url: "MISSING_WEBSITE",
+        operational_friction: true,
+        friction_details: "Practo virtual extension numbers frequently drop calls; no direct website or cosmetic booking funnel.",
+        recommended_pitch: "Direct-to-clinic website + WhatsApp cosmetic consultation funnel.",
+        pain_short: "no website link in Omega-1 and third-party directory phone extensions that drop calls",
+        fix_short: "a direct mobile page and WhatsApp cosmetic consultation funnel"
+      },
+      {
+        rank: 14,
+        urgency_tier: "Tier 2",
+        urgency_score: 76,
+        business_name: "Dental Paradise",
+        recipient: "Dental Paradise Team",
+        sub_category: "Pediatric & General Dentistry",
+        locality: "Gaur City 2, Greater Noida West",
+        rating: 4.8,
+        total_reviews: 32,
+        phone_whatsapp: "+919560604913",
+        website_url: "MISSING_WEBSITE",
+        operational_friction: false,
+        friction_details: "High-density Gaur City 2 market, but clinic has zero standalone website while corporate chains dominate.",
+        recommended_pitch: "Gaur City 2 hyper-local SEO landing page + automated WhatsApp QR review booster.",
+        pain_short: "no website link in Gaur City 2 while corporate chains nearby dominate local search",
+        fix_short: "a hyper-local mobile booking page to capture Gaur City 2 families"
+      },
+      {
+        rank: 15,
+        urgency_tier: "Tier 3",
+        urgency_score: 74,
+        business_name: "Tooth Angel Dental Clinic",
+        recipient: "Tooth Angel Team",
+        sub_category: "Family & Preventive Dentistry",
+        locality: "Ace City, Sector 1, Greater Noida West",
+        rating: 4.5,
+        total_reviews: 44,
+        phone_whatsapp: "+918048038812",
+        website_url: "http://toothangeldental.com (VIRTUAL_PBX)",
+        operational_friction: true,
+        friction_details: "Uses virtual PBX 08048 number that blocks WhatsApp chat; 1-2★ reviews note call drop issues.",
+        recommended_pitch: "Replace virtual PBX drop-offs with direct WhatsApp Business booking chatbot + Ace City SEO.",
+        pain_short: "a virtual PBX number on Google Maps that blocks WhatsApp chat and drops patient calls",
+        fix_short: "a direct WhatsApp appointment funnel that captures Ace City walk-ins"
+      },
+      {
+        rank: 16,
+        urgency_tier: "Tier 3",
+        urgency_score: 72,
+        business_name: "Pragya Dental Clinic",
+        recipient: "Dr. Pragya",
+        sub_category: "Root Canal Treatment (RCT) & Kids Dentistry",
+        locality: "SF-166, Gaur City Center, Greater Noida West",
+        rating: 4.6,
+        total_reviews: 138,
+        phone_whatsapp: "+919810913226",
+        website_url: "https://pragyadentalclinic.com",
+        operational_friction: true,
+        friction_details: "1-2★ reviews mention waiting delays at busy Gaur City Center complex and lack of live slot confirmation.",
+        recommended_pitch: "Automated WhatsApp slot booking & live queue updates for Gaur City Center visitors.",
+        pain_short: "recent reviews mentioning waiting delays at Gaur City Center and manual slot confirmation",
+        fix_short: "automated WhatsApp slot booking and live queue updates"
+      },
+      {
+        rank: 17,
+        urgency_tier: "Tier 3",
+        urgency_score: 70,
+        business_name: "Clover Dental Solutions",
+        recipient: "Clover Dental Team",
+        sub_category: "Restorative & Orthodontic Dentistry",
+        locality: "Supertech Eco Village 2, Greater Noida West",
+        rating: 4.6,
+        total_reviews: 51,
+        phone_whatsapp: "+919634552155",
+        website_url: "https://cloverdentalsolutions.com",
+        operational_friction: true,
+        friction_details: "Name similarity to Clove Dental causes brand confusion; reviewers struggle finding shop in Eco Village 2.",
+        recommended_pitch: "Brand differentiation SEO + automated WhatsApp directions/booking bot.",
+        pain_short: "name confusion with Clove Dental and patients struggling to find your Eco Village 2 shop",
+        fix_short: "automated WhatsApp booking that sends instant shop directions"
+      },
+      {
+        rank: 18,
+        urgency_tier: "Tier 3",
+        urgency_score: 68,
+        business_name: "Dr. Sinha Dental Clinic",
+        recipient: "Dr. Sinha",
+        sub_category: "Affordable Family Dental Care",
+        locality: "Greater Noida",
+        rating: 4.7,
+        total_reviews: 76,
+        phone_whatsapp: "+918929668873",
+        website_url: "https://drsinhadentalclinic.com",
+        operational_friction: true,
+        friction_details: "Static informational website without instant slot booking; busy phone lines during evening hours.",
+        recommended_pitch: "Add interactive 24/7 WhatsApp booking widget + automated patient recall reminders.",
+        pain_short: "a static website without instant slot booking and busy phone signals during evening hours",
+        fix_short: "a 24/7 WhatsApp booking assistant on your website"
+      },
+      {
+        rank: 19,
+        urgency_tier: "Tier 3",
+        urgency_score: 66,
+        business_name: "Executive Implant Dental Clinic",
+        recipient: "Dr. Chaudhary",
+        sub_category: "Prosthodontics, Zirconia Crowns & Implants",
+        locality: "S-11, Gamma Shopping Complex, Jagat Farm, Gamma-1",
+        rating: 4.9,
+        total_reviews: 290,
+        phone_whatsapp: "+919971963789",
+        website_url: "https://executiveimplantdentalclinic.com",
+        operational_friction: true,
+        friction_details: "High demand in Jagat Farm leads to walk-in congestion; static site lacks live calendar booking.",
+        recommended_pitch: "Automated WhatsApp implant consultation qualifier + live calendar booking integration.",
+        pain_short: "no self-serve slot booking on your Jagat Farm listing, causing walk-in waiting bottlenecks",
+        fix_short: "automated WhatsApp implant consultation scheduling"
+      },
+      {
+        rank: 20,
+        urgency_tier: "Tier 3",
+        urgency_score: 65,
+        business_name: "Peoples Dental Clinic",
+        recipient: "Dr. Ishan",
+        sub_category: "Painless RCT, Wisdom Tooth & Implants",
+        locality: "FS Plaza, Jagat Farm, Block E, Gamma-1",
+        rating: 4.9,
+        total_reviews: 410,
+        phone_whatsapp: "+918130624837",
+        website_url: "https://peoplesdentalclinic.com",
+        operational_friction: true,
+        friction_details: "Multiple reviews advise calling ahead due to high patient volume; manual phone booking creates front-desk bottlenecks.",
+        recommended_pitch: "AI WhatsApp receptionist & automated slot management to cut front-desk calls by 70%.",
+        pain_short: "multiple Jagat Farm reviews advising patients to call ahead due to high walk-in volume",
+        fix_short: "an automated WhatsApp slot assistant that cuts front-desk calls by 70%"
+      }
+    ];
+
+    let leads = [];
+    let activeRank = 1;
+    let activeHookMode = "default";
+
+    function buildHookVariants(lead) {
+      return {
+        default: `Hey ${lead.recipient}, I was looking up ${lead.business_name} on Google Maps today and noticed ${lead.pain_short}.\n\nI help local dental clinics in Greater Noida fix these exact digital leaks with ${lead.fix_short}.\n\nOpen to a quick 1-minute breakdown?\n(Reply STOP to opt out)`,
+        pain: `Hey ${lead.recipient}, ${lead.business_name}'s Google Maps profile currently shows ${lead.pain_short}, which silently leaks high-intent walk-ins to competing clinics nearby.\n\nWe fix this exact bottleneck using ${lead.fix_short}.\n\nOpen to a 1-minute breakdown of how to plug this leak?\n(Reply STOP to opt out)`,
+        social: `Hey ${lead.recipient}, I noticed ${lead.business_name} on Google Maps has ${lead.pain_short}.\n\nThree independent dental clinics in Greater Noida recently fixed this exact bottleneck with ${lead.fix_short} to capture 2x more patient bookings.\n\nOpen to a 1-minute audio breakdown?\n(Reply STOP to opt out)`,
+        micro: `Hey ${lead.recipient}, while checking ${lead.business_name} on Google Maps, I spotted ${lead.pain_short}.\n\nInstead of pitching anything, I mocked up a quick prototype showing how ${lead.fix_short} works for your clinic.\n\nMind if I send the 1-minute preview link here?\n(Reply STOP to opt out)`
+      };
+    }
+
+    function loadState() {
+      const saved = localStorage.getItem("gn_dental_crm_v1");
+      if (saved) {
+        try {
+          leads = JSON.parse(saved);
+          return;
+        } catch (e) {}
+      }
+      leads = INITIAL_LEADS.map(l => {
+        const variants = buildHookVariants(l);
+        return {
+          ...l,
+          status: "Not Contacted",
+          notes: "",
+          hook_variants: variants,
+          custom_message: variants.default
+        };
+      });
+    }
+
+    function saveState() {
+      localStorage.setItem("gn_dental_crm_v1", JSON.stringify(leads));
+      updateKPIs();
+    }
+
+    function resetProgress() {
+      localStorage.removeItem("gn_dental_crm_v1");
+      loadState();
+      renderLeads();
+      selectLead(leads[0].rank);
+    }
+
+    function updateKPIs() {
+      document.getElementById("kpi-total").textContent = leads.length;
+      document.getElementById("kpi-missing-web").textContent = leads.filter(l => l.website_url.includes("MISSING") || l.website_url.includes("BROKEN") || l.website_url.includes("SUBDOMAIN") || l.website_url.includes("PLACEHOLDER")).length;
+      document.getElementById("kpi-friction").textContent = leads.filter(l => l.operational_friction).length;
+      document.getElementById("kpi-sent").textContent = leads.filter(l => l.status === "WhatsApp Sent").length;
+      document.getElementById("kpi-replied").textContent = leads.filter(l => l.status === "Replied" || l.status === "Prototype Sent").length;
+      document.getElementById("kpi-booked").textContent = leads.filter(l => l.status === "Booked").length;
+    }
+
+    function statusBadgeClass(status) {
+      switch (status) {
+        case "WhatsApp Sent": return "bg-sky-500/15 text-sky-400 border-sky-500/30";
+        case "Replied": return "bg-indigo-500/15 text-indigo-400 border-indigo-500/30";
+        case "Prototype Sent": return "bg-purple-500/15 text-purple-400 border-purple-500/30";
+        case "Booked": return "bg-emerald-500/15 text-emerald-400 border-emerald-500/30";
+        case "Opted Out": return "bg-rose-500/15 text-rose-400 border-rose-500/30";
+        default: return "bg-[var(--secondary)] text-[var(--muted-foreground)] border-[var(--border)]";
+      }
+    }
+
+    function renderLeads() {
+      const q = document.getElementById("search-input").value.toLowerCase().trim();
+      const tierFilter = document.getElementById("filter-tier").value;
+      const webFilter = document.getElementById("filter-web").value;
+      const statusFilter = document.getElementById("filter-status").value;
+
+      const filtered = leads.filter(l => {
+        const matchQ = !q ||
+          l.business_name.toLowerCase().includes(q) ||
+          l.recipient.toLowerCase().includes(q) ||
+          l.locality.toLowerCase().includes(q) ||
+          l.friction_details.toLowerCase().includes(q);
+
+        const matchTier = tierFilter === "ALL" || l.urgency_tier === tierFilter;
+
+        let matchWeb = true;
+        if (webFilter === "MISSING") matchWeb = l.website_url.includes("MISSING");
+        else if (webFilter === "BROKEN") matchWeb = l.website_url.includes("BROKEN") || l.website_url.includes("SUBDOMAIN") || l.website_url.includes("PLACEHOLDER") || l.website_url.includes("PBX");
+        else if (webFilter === "HAS_WEB") matchWeb = l.website_url.startsWith("https://") && !l.website_url.includes("PLACEHOLDER");
+
+        const matchStatus = statusFilter === "ALL" || l.status === statusFilter;
+        return matchQ && matchTier && matchWeb && matchStatus;
+      });
+
+      document.getElementById("filtered-count").textContent = filtered.length;
+      const container = document.getElementById("leads-container");
+      container.innerHTML = "";
+
+      filtered.forEach(l => {
+        const isSelected = l.rank === activeRank;
+        const card = document.createElement("div");
+        card.onclick = () => selectLead(l.rank);
+        card.className = `cursor-pointer rounded-xl p-4 border transition shadow-sm ${
+          isSelected
+            ? "bg-[var(--card)] border-[var(--primary)] ring-2 ring-[var(--primary)]"
+            : "bg-[var(--card)] border-[var(--border)] hover:border-[var(--muted-foreground)]"
+        }`;
+
+        const webBadge = l.website_url.includes("MISSING")
+          ? `<span class="px-2 py-0.5 rounded text-xs font-semibold bg-rose-500/15 text-rose-400">MISSING WEBSITE</span>`
+          : (l.website_url.includes("BROKEN") || l.website_url.includes("SUBDOMAIN") || l.website_url.includes("PLACEHOLDER") || l.website_url.includes("PBX"))
+          ? `<span class="px-2 py-0.5 rounded text-xs font-semibold bg-amber-500/15 text-amber-400">BROKEN / SUBDOMAIN</span>`
+          : `<span class="px-2 py-0.5 rounded text-xs font-semibold bg-emerald-500/15 text-emerald-400">STATIC SITE</span>`;
+
+        const ratingColor = l.rating <= 4.2 ? "text-amber-400 font-bold" : "text-emerald-400 font-semibold";
+
+        card.innerHTML = `
+          <div class="flex flex-wrap items-start justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded text-xs font-bold bg-[var(--secondary)] text-[var(--foreground)]">#${l.rank} • Score ${l.urgency_score}</span>
+              <h4 class="text-sm font-bold text-[var(--foreground)]">${l.business_name}</h4>
+            </div>
+            <div class="flex items-center gap-1.5">
+              ${webBadge}
+              <span class="px-2 py-0.5 rounded text-xs font-medium border ${statusBadgeClass(l.status)}">${l.status}</span>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[var(--muted-foreground)] mt-2">
+            <span>📍 ${l.locality}</span>
+            <span class="${ratingColor}">★ ${l.rating} (${l.total_reviews} reviews)</span>
+            <span class="font-mono text-[var(--foreground)]">📞 ${l.phone_whatsapp}</span>
+          </div>
+
+          <p class="text-xs text-[var(--muted-foreground)] mt-2 line-clamp-2">
+            <strong class="text-[var(--foreground)]">Gap:</strong> ${l.friction_details}
+          </p>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function selectLead(rank) {
+      activeRank = rank;
+      const lead = leads.find(l => l.rank === rank);
+      if (!lead) return;
+
+      document.getElementById("inspector-rank").textContent = `RANK #${lead.rank} • ${lead.urgency_tier.toUpperCase()} (${lead.urgency_score}/100)`;
+      document.getElementById("inspector-name").textContent = lead.business_name;
+      document.getElementById("inspector-meta").textContent = `${lead.sub_category} • ${lead.locality}`;
+      document.getElementById("inspector-status").value = lead.status;
+      document.getElementById("inspector-recipient").textContent = lead.recipient;
+      document.getElementById("inspector-phone").textContent = lead.phone_whatsapp;
+      document.getElementById("inspector-web").textContent = lead.website_url;
+      document.getElementById("inspector-friction").textContent = lead.friction_details;
+      document.getElementById("inspector-pitch").textContent = lead.recommended_pitch;
+      document.getElementById("inspector-notes").value = lead.notes || "";
+
+      document.getElementById("inspector-message").value = lead.custom_message;
+      highlightHookButton(activeHookMode);
+      validateComposer();
+      renderLeads();
+    }
+
+    function selectHookVariant(mode) {
+      activeHookMode = mode;
+      const lead = leads.find(l => l.rank === activeRank);
+      if (!lead) return;
+      if (!lead.hook_variants) lead.hook_variants = buildHookVariants(lead);
+      lead.custom_message = lead.hook_variants[mode];
+      document.getElementById("inspector-message").value = lead.custom_message;
+      highlightHookButton(mode);
+      validateComposer();
+      saveState();
+    }
+
+    function applyGlobalHook(mode) {
+      activeHookMode = mode;
+      leads.forEach(l => {
+        if (!l.hook_variants) l.hook_variants = buildHookVariants(l);
+        l.custom_message = l.hook_variants[mode];
+      });
+      saveState();
+      selectLead(activeRank);
+    }
+
+    function highlightHookButton(mode) {
+      ["default", "pain", "social", "micro"].forEach(m => {
+        const btn = document.getElementById(`btn-hook-${m}`);
+        if (m === mode) {
+          btn.className = "px-3 py-2 rounded-lg text-xs font-medium border border-[var(--primary)] bg-[var(--secondary)] text-[var(--foreground)] text-left ring-1 ring-[var(--primary)] transition";
+        } else {
+          btn.className = "px-3 py-2 rounded-lg text-xs font-medium border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] text-left hover:bg-[var(--secondary)] transition";
+        }
+      });
+    }
+
+    function validateComposer() {
+      const msg = document.getElementById("inspector-message").value;
+      const lead = leads.find(l => l.rank === activeRank);
+      if (lead) {
+        lead.custom_message = msg;
+        saveState();
+      }
+
+      const words = msg.trim() ? msg.trim().split(/\s+/).length : 0;
+      const hasStop = /reply\s+stop/i.test(msg);
+
+      const wordBadge = document.getElementById("badge-word-count");
+      wordBadge.textContent = `${words} / 60 words`;
+      if (words > 0 && words < 60) {
+        wordBadge.className = "px-2 py-0.5 rounded text-xs font-semibold bg-emerald-500/15 text-emerald-400";
+      } else {
+        wordBadge.className = "px-2 py-0.5 rounded text-xs font-semibold bg-rose-500/15 text-rose-400";
+      }
+
+      const stopBadge = document.getElementById("badge-opt-out");
+      if (hasStop) {
+        stopBadge.textContent = "STOP Opt-Out ✓";
+        stopBadge.className = "px-2 py-0.5 rounded text-xs font-semibold bg-emerald-500/15 text-emerald-400";
+      } else {
+        stopBadge.textContent = "Missing STOP ✕";
+        stopBadge.className = "px-2 py-0.5 rounded text-xs font-semibold bg-rose-500/15 text-rose-400";
+      }
+    }
+
+    function updateActiveLeadStatus(newStatus) {
+      const lead = leads.find(l => l.rank === activeRank);
+      if (!lead) return;
+      lead.status = newStatus;
+      saveState();
+      renderLeads();
+    }
+
+    function saveActiveNote(note) {
+      const lead = leads.find(l => l.rank === activeRank);
+      if (!lead) return;
+      lead.notes = note;
+      saveState();
+    }
+
+    function copyActiveMessage() {
+      const msg = document.getElementById("inspector-message").value;
+      navigator.clipboard.writeText(msg);
+      const btn = document.getElementById("btn-copy-msg");
+      const orig = btn.textContent;
+      btn.textContent = "Copied to Clipboard ✓";
+      setTimeout(() => { btn.textContent = orig; }, 1600);
+    }
+
+    function launchWhatsApp() {
+      const lead = leads.find(l => l.rank === activeRank);
+      if (!lead) return;
+      const cleanPhone = lead.phone_whatsapp.replace(/[^0-9]/g, "");
+      const msg = encodeURIComponent(document.getElementById("inspector-message").value);
+      if (lead.status === "Not Contacted") {
+        lead.status = "WhatsApp Sent";
+        document.getElementById("inspector-status").value = "WhatsApp Sent";
+        saveState();
+        renderLeads();
+      }
+      window.open(`https://wa.me/${cleanPhone}?text=${msg}`, "_blank");
+    }
+
+    function openAddModal() {
+      document.getElementById("add-modal").classList.remove("hidden");
+    }
+
+    function closeAddModal() {
+      document.getElementById("add-modal").classList.add("hidden");
+    }
+
+    function saveNewProspect() {
+      const name = document.getElementById("new-name").value.trim();
+      const recipient = document.getElementById("new-recipient").value.trim() || "Team";
+      const phone = document.getElementById("new-phone").value.trim();
+      const locality = document.getElementById("new-locality").value.trim();
+      const web = document.getElementById("new-web").value.trim() || "MISSING_WEBSITE";
+      const rating = parseFloat(document.getElementById("new-rating").value) || 4.0;
+      const reviews = parseInt(document.getElementById("new-reviews").value, 10) || 25;
+      const friction = document.getElementById("new-friction").value.trim() || "Missing website link and self-serve slot booking.";
+
+      if (!name || !phone) return;
+
+      const newRank = leads.length + 1;
+      const newLead = {
+        rank: newRank,
+        urgency_tier: rating <= 4.2 || web.includes("MISSING") ? "Tier 1" : "Tier 2",
+        urgency_score: rating <= 4.2 ? 91 : 82,
+        business_name: name,
+        recipient: recipient,
+        sub_category: "Dental Clinic",
+        locality: locality || "Greater Noida",
+        rating: rating,
+        total_reviews: reviews,
+        phone_whatsapp: phone,
+        website_url: web,
+        operational_friction: true,
+        friction_details: friction,
+        recommended_pitch: "Fast mobile booking page + automated WhatsApp slot confirmation.",
+        pain_short: friction.toLowerCase(),
+        fix_short: "automated WhatsApp slot booking and a fast mobile page",
+        status: "Not Contacted",
+        notes: ""
+      };
+      newLead.hook_variants = buildHookVariants(newLead);
+      newLead.custom_message = newLead.hook_variants[activeHookMode];
+
+      leads.push(newLead);
+      saveState();
+      closeAddModal();
+      renderLeads();
+      selectLead(newRank);
+    }
+
+    function exportJSON() {
+      const blob = new Blob([JSON.stringify(leads, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "greater_noida_dental_crm_export.json";
+      a.click();
+    }
+
+    function exportCSV() {
+      const headers = ["Rank","Urgency_Tier","Urgency_Score","Status","Business_Name","Recipient","Locality","Rating","Total_Reviews","Phone_WhatsApp","Website_URL","Friction_Details","Custom_WhatsApp_Message","CRM_Notes"];
+      const rows = leads.map(l => [
+        l.rank,
+        l.urgency_tier,
+        l.urgency_score,
+        `"${(l.status || "").replace(/"/g, '""')}"`,
+        `"${(l.business_name || "").replace(/"/g, '""')}"`,
+        `"${(l.recipient || "").replace(/"/g, '""')}"`,
+        `"${(l.locality || "").replace(/"/g, '""')}"`,
+        l.rating,
+        l.total_reviews,
+        l.phone_whatsapp,
+        `"${(l.website_url || "").replace(/"/g, '""')}"`,
+        `"${(l.friction_details || "").replace(/"/g, '""')}"`,
+        `"${(l.custom_message || "").replace(/\n/g, " ").replace(/"/g, '""')}"`,
+        `"${(l.notes || "").replace(/"/g, '""')}"`
+      ].join(","));
+      const csv = [headers.join(","), ...rows].join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "greater_noida_dental_crm_export.csv";
+      a.click();
+    }
+
+    // Initialize
+    loadState();
+    updateKPIs();
+    renderLeads();
+    selectLead(1);
+  </script>
+</body>
+</html>

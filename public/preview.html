@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title id="page-title">Live Clinic Prototype — Instant WhatsApp Booking & Patient Portal</title>
+  <meta name="description" content="Interactive mobile clinic prototype with 24/7 WhatsApp appointment slot booking, OPD timing sync, and 5-star review recovery." />
+  <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --bg: #070b12;
+      --card: #0f172a;
+      --border: #1e293b;
+      --primary: #10b981;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+    }
+  </style>
+</head>
+<body class="bg-[var(--bg)] text-[var(--text)] antialiased min-h-screen pb-24">
+
+  <!-- Top Prototype Watermark Banner (For the Doctor Reviewing) -->
+  <div class="bg-emerald-500 text-slate-950 px-4 py-2 text-xs font-bold flex flex-wrap items-center justify-between gap-2 sticky top-0 z-50 shadow-md">
+    <div class="flex items-center gap-2">
+      <span class="px-2 py-0.5 rounded bg-slate-950 text-emerald-400 uppercase tracking-wider">LIVE PROTOTYPE</span>
+      <span id="banner-for-doc">Prepared Exclusively for Doctor</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <span id="banner-quote-pill" class="underline">Setup: ₹18,500 • Live in 5 Days</span>
+    </div>
+  </div>
+
+  <div class="max-w-4xl mx-auto px-4 pt-6 space-y-6">
+
+    <!-- Clinic Hero Section (PAS High-Conversion Above-the-Fold) -->
+    <div class="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 shadow-xl space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+            ✓ Verified Dental & Implant Center
+          </span>
+          <span id="clinic-sector-badge" class="px-2.5 py-1 rounded-full text-xs font-medium bg-slate-800 text-slate-300">
+            📍 Greater Noida
+          </span>
+        </div>
+        <div class="flex items-center gap-1.5 text-xs font-bold text-amber-400 bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-full">
+          <span>★★★★★</span>
+          <span id="clinic-rating-badge">4.9★ Patient Care Target</span>
+        </div>
+      </div>
+
+      <div>
+        <h1 id="clinic-name" class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
+          Clinic Name
+        </h1>
+        <p id="clinic-sub" class="text-sm sm:text-base text-emerald-400 font-semibold mt-1">
+          Specialist Dental Care, Painless Root Canal & Implants
+        </p>
+        <p id="clinic-address" class="text-xs text-[var(--muted)] mt-1">
+          Greater Noida, Uttar Pradesh
+        </p>
+      </div>
+
+      <!-- Trust Badges Strip -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2">
+        <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-2.5 text-xs">
+          <div class="text-emerald-400 font-bold">⚡ Zero Wait Time</div>
+          <div class="text-[var(--muted)]">Pre-confirmed OPD slots</div>
+        </div>
+        <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-2.5 text-xs">
+          <div class="text-emerald-400 font-bold">🛡️ 100% Sterile</div>
+          <div class="text-[var(--muted)]">Class-B Autoclave Protocol</div>
+        </div>
+        <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-2.5 text-xs">
+          <div class="text-emerald-400 font-bold">👨‍⚕️ Specialist Lead</div>
+          <div id="clinic-doc-badge" class="text-[var(--muted)]">Senior Dental Surgeon</div>
+        </div>
+        <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-2.5 text-xs">
+          <div class="text-emerald-400 font-bold">📍 Instant Map Pin</div>
+          <div class="text-[var(--muted)]">Auto-sent on WhatsApp</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interactive Demo #1: 24/7 WhatsApp Appointment Slot Booking Engine -->
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+      <div class="md:col-span-7 bg-[var(--card)] border border-emerald-500/40 rounded-2xl p-5 shadow-lg space-y-4">
+        <div class="flex items-center justify-between border-b border-[var(--border)] pb-3">
+          <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">Interactive Demo #1</span>
+            <h2 class="text-lg font-bold text-white">24/7 Instant WhatsApp Slot Booking</h2>
+          </div>
+          <span class="px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-500/15 text-emerald-300">Live OPD Sync</span>
+        </div>
+
+        <p class="text-xs text-[var(--muted)]">
+          Instead of losing evening or busy-hour callers, patients pick their treatment & slot below and send a pre-formatted booking confirmation directly to your clinic WhatsApp:
+        </p>
+
+        <div class="space-y-3 text-xs">
+          <div>
+            <label class="block font-semibold text-slate-200 mb-1.5">1. Select Treatment / Consultation:</label>
+            <div class="grid grid-cols-2 gap-2" id="treatment-grid">
+              <button onclick="selectTreatment('Painless Root Canal (RCT) & Crown')" class="treat-btn px-3 py-2 rounded-lg border border-emerald-500 bg-emerald-500/15 text-white font-semibold text-left">
+                🦷 Painless RCT & Crown
+              </button>
+              <button onclick="selectTreatment('Dental Implant Consultation')" class="treat-btn px-3 py-2 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 text-left">
+                🔩 Dental Implant Consult
+              </button>
+              <button onclick="selectTreatment('Braces / Clear Aligners')" class="treat-btn px-3 py-2 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 text-left">
+                ✨ Braces / Aligners
+              </button>
+              <button onclick="selectTreatment('General Checkup, Scaling & Kids')" class="treat-btn px-3 py-2 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 text-left">
+                👨‍👩‍👧 Checkup & Scaling
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-200 mb-1.5">2. Select Preferred OPD Slot Today / Tomorrow:</label>
+            <div class="grid grid-cols-3 gap-2" id="slot-grid">
+              <button onclick="selectSlot('11:00 AM (Morning OPD)')" class="slot-btn px-2.5 py-2 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 font-medium">
+                11:00 AM
+              </button>
+              <button onclick="selectSlot('12:30 PM (Morning OPD)')" class="slot-btn px-2.5 py-2 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 font-medium">
+                12:30 PM
+              </button>
+              <button onclick="selectSlot('05:30 PM (Evening OPD)')" class="slot-btn px-2.5 py-2 rounded-lg border border-emerald-500 bg-emerald-500/15 text-white font-semibold">
+                05:30 PM ★
+              </button>
+              <button onclick="selectSlot('06:30 PM (Evening OPD)')" class="slot-btn px-2.5 py-2 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 font-medium">
+                06:30 PM
+              </button>
+              <button onclick="selectSlot('07:30 PM (Evening OPD)')" class="slot-btn px-2.5 py-2 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 font-medium">
+                07:30 PM
+              </button>
+              <button onclick="selectSlot('Tomorrow 10:30 AM')" class="slot-btn px-2.5 py-2 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 font-medium">
+                Tomorrow 10:30
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-200 mb-1">3. Patient Name (Try typing a test name):</label>
+            <input id="patient-name" type="text" value="Rahul Sharma" oninput="updateSimulatedPreview()" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white" />
+          </div>
+
+          <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-1">
+            <div class="text-[11px] font-bold text-emerald-400 uppercase">Instant WhatsApp Message Generated for Front Desk:</div>
+            <p id="simulated-wa-text" class="text-xs text-slate-200 font-mono leading-relaxed"></p>
+          </div>
+
+          <button onclick="testPatientBooking()" class="w-full py-3 rounded-xl text-sm font-bold bg-emerald-500 text-slate-950 hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/20">
+            ⚡ Test This 1-Tap WhatsApp Slot Booking Now ↗
+          </button>
+        </div>
+      </div>
+
+      <!-- Interactive Demo #2: Waiting Room QR Rating Protection & Audit Fix -->
+      <div class="md:col-span-5 space-y-4">
+        <div class="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-5 space-y-3.5">
+          <span class="text-xs font-bold uppercase tracking-wider text-amber-400">Interactive Demo #2</span>
+          <h3 class="text-base font-bold text-white">5-Star Google Rating Shield (QR Filter)</h3>
+          <p class="text-xs text-[var(--muted)]">
+            Tap a star rating below to see how our Waiting Room QR code routes happy patients to Google Maps while catching complaints privately:
+          </p>
+
+          <div class="flex items-center justify-center gap-2 py-2">
+            <button onclick="testReviewShield(1)" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs hover:border-rose-500">1★</button>
+            <button onclick="testReviewShield(2)" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs hover:border-rose-500">2★</button>
+            <button onclick="testReviewShield(3)" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs hover:border-amber-500">3★</button>
+            <button onclick="testReviewShield(4)" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs hover:border-emerald-500">4★</button>
+            <button onclick="testReviewShield(5)" class="px-3 py-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500 text-emerald-300 font-bold text-xs">5★</button>
+          </div>
+
+          <div id="review-shield-result" class="p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-xs text-emerald-200">
+            ✓ <strong>5★ Tapped:</strong> Patient is redirected straight to your Google Business Profile review box with 1 tap!
+          </div>
+        </div>
+
+        <!-- Audit Leak Fixed Summary for This Specific Clinic -->
+        <div class="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-5 space-y-3">
+          <div class="text-xs font-bold uppercase tracking-wider text-sky-400">Diagnostic Audit Fixed</div>
+          <h3 id="audit-package-title" class="text-sm font-bold text-white">Package Deliverables</h3>
+          <p id="audit-gap-box" class="text-xs text-amber-300 bg-amber-500/10 border border-amber-500/25 rounded-lg p-2.5"></p>
+          <ul id="audit-deliverables" class="text-xs text-slate-300 space-y-1.5 pl-1"></ul>
+          <div class="pt-2 border-t border-[var(--border)] text-xs">
+            <span class="text-emerald-400 font-bold">🎯 Clinic ROI Math: </span>
+            <span id="audit-roi-box" class="text-slate-200"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sticky Bottom Action Bar for the Doctor (Razorpay ₹2,999 Slot-Lock Deposit + Official WhatsApp) -->
+  <div class="fixed bottom-0 inset-x-0 bg-slate-950/95 backdrop-blur border-t border-slate-800 px-4 py-3 z-50">
+    <div class="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5">
+      <div class="text-xs text-center sm:text-left">
+        <span class="font-bold text-white" id="footer-clinic-label">Lock 1-Clinic Sector Exclusivity & Launch in 5 Days:</span>
+        <div class="text-[11px] text-slate-300 mt-0.5">
+          <span class="text-emerald-400 font-bold">₹2,999/- Slot-Lock Deposit Today</span> •
+          <span id="footer-price-label">Balance ₹15,501 only after live delivery</span>
+        </div>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <button onclick="openRazorpayDepositCheckout()" class="px-4 py-2.5 rounded-xl text-xs font-extrabold bg-emerald-500 text-slate-950 hover:bg-emerald-400 shadow-lg shadow-emerald-500/20 transition">
+          🔒 Pay ₹2,999/- Slot-Lock Deposit (Razorpay UPI / Card) ↗
+        </button>
+        <a id="footer-approve-btn" href="#" target="_blank" class="px-3 py-2.5 rounded-xl text-xs font-semibold border border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800 transition">
+          💬 Ask on WhatsApp
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      projectId: "indian-bison-crm-2026",
+      appId: "1:303567261777:web:e3e4d8875ec9ccef262870",
+      storageBucket: "indian-bison-crm-2026.firebasestorage.app",
+      apiKey: "AIzaSyB4ZsS4KA4qDmh_lFA7I_0W_E24aJEp-Zs",
+      authDomain: "indian-bison-crm-2026.firebaseapp.com",
+      messagingSenderId: "303567261777"
+    };
+
+    try {
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+      window.recordDepositInFirestore = async function(rank, setupFee, paymentId) {
+        try {
+          await setDoc(doc(db, "leads", `lead_${String(rank).padStart(3, "0")}`), {
+            status: "Booked",
+            deposit_paid: true,
+            slot_lock_deposit_inr: 2999,
+            balance_on_delivery_inr: Math.max(0, setupFee - 2999),
+            razorpay_payment_id: paymentId,
+            deposit_paid_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }, { merge: true });
+        } catch (err) {
+          console.warn("Firestore deposit sync notice:", err);
+        }
+      };
+    } catch (e) {}
+  </script>
+
+  <script>
+    const CLINIC_DATA = [
+      { rank: 1, name: "3 C Dental Clinic (3C Dental Center)", doc: "Dr. Abhinav", spec: "Oral Surgery, Pediatric & Cosmetic Dentistry", loc: "Sector Pi-1 / Phi-1, Eldeco Arcadia, Greater Noida", phone: "+918130472244", rating: 3.7, setup: 22000, monthly: 4500, pkg: "Rating Recovery + 5-Page Clinic Web + WhatsApp Bot", gap: "Fixes sliding 3.7★ rating, unconfirmed walk-in wait times, and visiting specialist schedule confusion.", roi: "1 Single Dental Implant (₹25,000) in Sector Pi-1 recovers 100% of setup cost.", items: ["5-Page Mobile Clinic Website + Doctor Profiles + SSL (₹13,000)", "24/7 WhatsApp Appointment Slot & Visiting Specialist Bot (₹5,500)", "GBP Audit + Waiting Room QR Rating Recovery System (₹3,500)"] },
+      { rank: 2, name: "Dr. Suman Singh Dental Health Clinic", doc: "Dr. Suman", spec: "Endodontics (RCT) & General Dentistry", loc: "A-3, Edana Apartment, Sector Alpha-1, Greater Noida", phone: "+919953044628", rating: 4.1, setup: 16500, monthly: 3500, pkg: "SSL Website Rebuild + Evening OPD WhatsApp Bot", gap: "Replaces unsecure HTTP warning and resolves evening OPD timing confusion in Sector Alpha-1.", roi: "Just 2 Root Canal + Zirconia Crown cases (₹18,000) pay off the entire rebuild.", items: ["Full SSL Website Modernization & Mobile Speed Rebuild (₹9,500)", "Evening OPD WhatsApp Auto-Responder & Slot Confirmation (₹4,500)", "Google Maps 4.1★ → 4.8★ Review Recovery Funnel (₹2,500)"] },
+      { rank: 3, name: "Mouth Matters (The Dental Centre)", doc: "Mouth Matters Team", spec: "Adult Orthodontics, Aligners & Restorative", loc: "Shop 42, Kadamba Complex, Sector Gamma-1, Greater Noida", phone: "+919889085093", rating: 4.2, setup: 24000, monthly: 5000, pkg: "Custom Domain + Aligner Smile Funnel + WhatsApp Qualifier", gap: "Upgrades legacy Yolasite free subdomain to a custom aligner & RCT booking portal.", roi: "1 Clear Aligner patient in Gamma-1 (₹65,000–₹1.2L) pays for 3x this entire setup.", items: ["Custom .com/.in Domain + High-Converting Aligner & Smile Website (₹15,000)", "Interactive Aligner Cost Calculator & WhatsApp Qualifier Bot (₹6,000)", "Gamma-1 Local SEO & GBP Treatment Catalog Setup (₹3,000)"] },
+      { rank: 4, name: "Muskan Dental Clinic", doc: "Dr. Gautam", spec: "Crowns, Bridges & Implants", loc: "Om Tower, Alpha-1 Commercial Belt, Greater Noida", phone: "+919873206739", rating: 4.4, setup: 26000, monthly: 5500, pkg: "Authority Clinic Website + WhatsApp Queue & Slot Manager", gap: "Converts 520+ Alpha-1 Google reviews into pre-scheduled slots, cutting waiting room delays.", roi: "1 Dental Implant (₹28,000) or 3 Zirconia Crowns recover 100% of setup.", items: ["Authority Multi-Page Dental & Implant Website for Alpha-1 (₹16,000)", "Automated WhatsApp Slot Booking & Live Queue Tracker (₹6,500)", "Competitor Defense Local SEO against Alpha-1 Corporate Chains (₹3,500)"] },
+      { rank: 5, name: "The Dentist Multispeciality Dental Clinic", doc: "Dr. Nakul", spec: "Multispeciality Dentistry, RCT & Implants", loc: "Sector Beta-2, Greater Noida", phone: "+919289992022", rating: 4.9, setup: 38000, monthly: 7500, pkg: "Flagship Multispeciality Portal + AI WhatsApp Receptionist", gap: "Eliminates front-desk phone bottlenecks for 1,020+ review clinic in Sector Beta-2.", roi: "Saves 60+ hrs/mo of front-desk phone overload; paid off by 1.5 Implant cases.", items: ["Flagship Multispeciality Dental Portal + Smile Gallery + SSL (₹22,000)", "AI WhatsApp Receptionist (Multi-Doctor Slot Booking & Reminders) (₹11,000)", "Automated Post-Op Care & GBP Authority Domination (₹5,000)"] },
+      { rank: 6, name: "Smile of India Dental Clinic & Implant Center", doc: "Smile of India Team", spec: "Implantology & Family Dentistry", loc: "Greater Noida", phone: "+919711157741", rating: 4.2, setup: 19500, monthly: 4000, pkg: "Custom Implant Website (Replace Localo) + Instant Bot", gap: "Replaces generic Localo placeholder card with dedicated implant booking & instant fee guide.", roi: "1 Single Dental Implant (₹22,000+) covers 100% of setup cost.", items: ["Custom Domain + Dental Implant & Family Care Website (₹12,000)", "Instant WhatsApp Treatment Fee Guide & Callback Bot (₹4,500)", "Google Maps 4.2★ Rating Recovery & Review Automation (₹3,000)"] },
+      { rank: 7, name: "Aggarwal Dentals Clinic", doc: "Aggarwal Dentals Team", spec: "General & Preventive Family Dentistry", loc: "Sector Beta-1, Greater Noida", phone: "+919899937440", rating: 4.9, setup: 18000, monthly: 3500, pkg: "Family Dental SEO Website + WhatsApp Click-to-Book", gap: "Gives 4.9★ Beta-1 clinic a dedicated treatment menu & self-serve WhatsApp booking link.", roi: "2 Root Canal + Crown cases (₹18,000) in Beta-1 pay off 100% of setup.", items: ["5-Page Mobile Family Dental Website + Treatment Menu (₹11,500)", "24/7 WhatsApp Appointment & OPD Timing Bot (₹4,000)", "Sector Beta-1 Local SEO & Google Maps Optimization (₹2,500)"] },
+      { rank: 8, name: "32 Dentz Clinic", doc: "32 Dentz Team", spec: "Multispeciality & Full-Mouth Rehabilitation", loc: "UGF 39, Omaxe Arcade, Near Pari Chowk, Omega-1", phone: "+918210561224", rating: 4.8, setup: 24000, monthly: 4500, pkg: "Full-Mouth Rehab Website + Auto-Location Pin WhatsApp Bot", gap: "Solves Omaxe Arcade parking/entrance confusion by auto-sending WhatsApp landmark pins on booking.", roi: "1 Implant or Full-Mouth Rehab consult near Pari Chowk pays off setup.", items: ["Multispeciality & Full-Mouth Rehab Website + Omaxe Visual Guide (₹15,000)", "WhatsApp Booking Bot with Auto-Sent Parking & Entrance Pin (₹5,500)", "Pari Chowk / Omega-1 Local Search Ranking Setup (₹3,500)"] },
+      { rank: 9, name: "Eugenics Dental Clinic", doc: "Eugenics Dental Team", spec: "Sterilization-Focused General & Cosmetic", loc: "Opp. Rampur Market, Sector Beta-2, Greater Noida", phone: "+918971372986", rating: 4.6, setup: 18500, monthly: 3500, pkg: "Clinic Website + Live OPD Hours Sync + WhatsApp Scheduler", gap: "Eliminates unconfirmed evening OPD timing complaints with live WhatsApp slot confirmation.", roi: "2 evening walk-in RCT + Crown patients cover 100% of setup.", items: ["Sterilization & Cosmetic Showcase Website + SSL (₹11,500)", "Live OPD Slot Confirmation & Holiday Alert WhatsApp Bot (₹4,500)", "GBP Live Hours & Service Attribute Optimization (₹2,500)"] },
+      { rank: 10, name: "M.S Dental Clinic Implant & Braces Centre", doc: "M.S Dental Team", spec: "Dental Implants & Orthodontic Braces", loc: "Mukhiya Jee Plaza, Sector Pi-1, Accher, Greater Noida", phone: "+919667737010", rating: 4.9, setup: 25000, monthly: 4500, pkg: "Implant & Braces Smile Gallery Site + EMI/Brochure Bot", gap: "Showcases high-ticket Sector Pi-1 implant & braces transformations with instant WhatsApp booking.", roi: "Just 1 Orthodontic Braces or Implant case (₹30,000+) covers full setup.", items: ["Before/After Smile Gallery & Implant Portfolio Website (₹16,000)", "WhatsApp Braces/Implant Brochure & Consultation Bot (₹5,500)", "Sector Pi-1 / Accher High-Ticket Keyword SEO (₹3,500)"] },
+      { rank: 11, name: "Family Dental Clinic", doc: "Family Dental Team", spec: "General & Pediatric Family Dentistry", loc: "Sector Alpha-2, Greater Noida", phone: "+919311823735", rating: 4.9, setup: 19000, monthly: 4000, pkg: "Owned Domain Website (Replace Aggregator) + Reminder Bot", gap: "Stops leaking Alpha-2 patients to third-party directory aggregators and reduces peak-hour waiting.", roi: "Stops leaking Alpha-2 patients to directory aggregators; 2 RCTs pay it off.", items: ["Independent Clinic Domain & 5-Page Family Dental Website (₹12,000)", "Peak-Hour Slot Scheduler & Automated WhatsApp Reminder Bot (₹4,500)", "GBP Direct Link Replacement & Citation Cleanup (₹2,500)"] },
+      { rank: 12, name: "Krishna Dental Clinic & Implant Centre", doc: "Krishna Dental Team", spec: "Implantology & Oral Healthcare", loc: "Alpha-1 / Aicher Market, Greater Noida", phone: "+919354433497", rating: 4.8, setup: 32000, monthly: 6500, pkg: "Multi-Branch Portal (3 Locations) + Doctor Routing Bot", gap: "Routes patients cleanly across Alpha-1, Aicher, and Tech Zone IV branches with live doctor timings.", roi: "Only ~₹10,600 per branch across 3 branches; paid off by 1.5 Implant cases.", items: ["Multi-Branch Dental Portal (Alpha-1, Aicher & Tech Zone IV) (₹20,000)", "Branch-Wise WhatsApp Appointment Router & Doctor Schedule Bot (₹8,000)", "Unified Multi-Location Google Business Profile Sync (₹4,000)"] },
+      { rank: 13, name: "Cosmozone Clinic (Dental & Aesthetics)", doc: "Cosmozone Team", spec: "Cosmetic Dentistry & Aesthetic Care", loc: "Omaxe Arcade, Near Pari Chowk, Sector Omega-1", phone: "+919891812068", rating: 4.7, setup: 23000, monthly: 4500, pkg: "Cosmetic Smile Studio Website + Direct WhatsApp Funnel", gap: "Bypasses dropped virtual directory extension calls with direct-to-clinic WhatsApp booking.", roi: "Eliminates Practo call drops; 1 Smile Design / Veneer case covers 100% of setup.", items: ["Premium Cosmetic Dentistry & Aesthetics Portfolio Site (₹14,500)", "Direct WhatsApp Consultation & Smile Assessment Funnel (₹5,500)", "Omega-1 / Pari Chowk Aesthetic Search Optimization (₹3,000)"] },
+      { rank: 14, name: "Dental Paradise", doc: "Dental Paradise Team", spec: "Pediatric & General Dentistry", loc: "Gaur City 2, Greater Noida West", phone: "+919560604913", rating: 4.8, setup: 17500, monthly: 3500, pkg: "Gaur City 2 Hyper-Local SEO Website + QR Review Booster", gap: "Captures high-density Gaur City 2 society searches before corporate chains intercept them.", roi: "2 Family RCT / Pediatric cases from Gaur City 2 societies cover full setup.", items: ["Gaur City 2 Society-Targeted Family & Kids Dental Website (₹11,000)", "Instant WhatsApp Booking + Waiting Room QR Review Booster (₹4,000)", "Greater Noida West Local Map Pack Optimization (₹2,500)"] },
+      { rank: 15, name: "Tooth Angel Dental Clinic", doc: "Tooth Angel Team", spec: "Family & Preventive Dentistry", loc: "Ace City, Sector 1, Greater Noida West", phone: "+918048038812", rating: 4.5, setup: 14500, monthly: 3000, pkg: "Direct WhatsApp Booking Funnel (Replace PBX) + SSL Fix", gap: "Replaces 08048 virtual PBX call drops with direct 1-tap WhatsApp appointment scheduling.", roi: "Replaces dropped 08048 PBX calls; 1.5 RCT+Crown cases cover full setup.", items: ["Website HTTPS/SSL Security Upgrade & Mobile Speed Fix (₹6,500)", "Direct WhatsApp Business Slot Booking Bot (Replacing PBX Drops) (₹5,500)", "Ace City / Sector 1 GBP Conversion Cleanup (₹2,500)"] },
+      { rank: 16, name: "Pragya Dental Clinic", doc: "Dr. Pragya", spec: "Root Canal Treatment (RCT) & Kids Dentistry", loc: "SF-166, Gaur City Center, Greater Noida West", phone: "+919810913226", rating: 4.6, setup: 12500, monthly: 3500, pkg: "WhatsApp Live Slot Scheduler + Mall Queue Alert Bot", gap: "Eliminates Gaur City Center waiting room delays with automated WhatsApp slot & queue alerts.", roi: "Just 1–2 RCT+Crown patients at Gaur Chowk cover 100% of setup.", items: ["Interactive WhatsApp Slot Booking Widget on Existing Website (₹5,500)", "Automated Pre-Visit Queue Alert & Mall Parking Guide Bot (₹4,500)", "Automated 5-Star Review Request Flow for RCT/Kids Patients (₹2,500)"] },
+      { rank: 17, name: "Clover Dental Solutions", doc: "Clover Dental Team", spec: "Restorative & Orthodontic Dentistry", loc: "Supertech Eco Village 2, Greater Noida West", phone: "+919634552155", rating: 4.6, setup: 11500, monthly: 3000, pkg: "Brand Differentiation SEO + Auto-Directions WhatsApp Bot", gap: "Prevents brand confusion with Clove Dental and sends instant Eco Village 2 entrance pins.", roi: "Stops losing Eco Village 2 walk-ins to Clove Dental; 1.5 RCTs cover it.", items: ["WhatsApp Slot Booking & Instant Eco Village 2 Map Pin Bot (₹5,500)", "Website Conversion & Landmark Navigation Upgrade (₹3,500)", "GBP Brand Differentiation & Local Society Citations (₹2,500)"] },
+      { rank: 18, name: "Dr. Sinha Dental Clinic", doc: "Dr. Sinha", spec: "Affordable Family Dental Care", loc: "Greater Noida", phone: "+918929668873", rating: 4.7, setup: 9500, monthly: 2500, pkg: "24/7 Interactive WhatsApp Booking Widget + Recall System", gap: "Upgrades static website with 24/7 self-serve WhatsApp booking during busy evening hours.", roi: "Lowest entry quote — just 1 single RCT + Crown case (₹9,500) pays for it!", items: ["24/7 Interactive WhatsApp Booking Widget on Existing Site (₹4,500)", "Evening Missed-Call-to-WhatsApp Auto-Booking Flow (₹3,000)", "6-Month Routine Scaling/Checkup Patient Recall Automation (₹2,000)"] },
+      { rank: 19, name: "Executive Implant Dental Clinic", doc: "Dr. Chaudhary", spec: "Prosthodontics, Zirconia Crowns & Implants", loc: "S-11, Gamma Shopping Complex, Jagat Farm, Gamma-1", phone: "+919971963789", rating: 4.9, setup: 16000, monthly: 4500, pkg: "Implant Triage WhatsApp Assistant + Live Calendar Sync", gap: "Streamlines high-volume Jagat Farm walk-ins with pre-qualified implant & crown slot scheduling.", roi: "Less than 1 single Zirconia Implant case in Jagat Farm covers full setup.", items: ["Automated WhatsApp Implant & Prosthodontic Triage Bot (₹7,500)", "Live Calendar Slot Booking Integration on Existing Website (₹5,500)", "Automated Post-Implant Follow-Up & Review Sequence (₹3,000)"] },
+      { rank: 20, name: "Peoples Dental Clinic", doc: "Dr. Ishan", spec: "Painless RCT, Wisdom Tooth & Implants", loc: "FS Plaza, Jagat Farm, Block E, Gamma-1", phone: "+918130624837", rating: 4.9, setup: 28000, monthly: 5500, pkg: "High-Volume AI WhatsApp Receptionist + Multi-Doctor Slot Bot", gap: "Cuts front-desk phone calls by 70% across 4 MDS specialists in busy Jagat Farm.", roi: "Cuts front-desk phone calls by 70% across 4 MDS doctors; 1 Implant pays it off.", items: ["Multi-Doctor (4 MDS Specialists) WhatsApp Slot & Queue Engine (₹14,000)", "Automated Pre-Visit Confirmation, Rescheduling & Map Pin Bot (₹9,000)", "Website Live Slot Widget + Post-RCT Care Automation (₹5,000)"] },
+      { rank: 21, name: "Apex Dental & Implant Studio (Live Trial)", doc: "Dr. Gopal (Trial)", spec: "Dental Implants, Painless RCT & Smile Design", loc: "Sector Alpha-1, Greater Noida", phone: "+916209228845", rating: 4.1, setup: 18500, monthly: 3500, pkg: "Full Clinic Website + 24/7 WhatsApp Slot Bot + Rating Shield", gap: "Missing self-serve WhatsApp appointment booking and unconfirmed evening OPD slot timings.", roi: "Just 1 Single Dental Implant (₹25,000) covers 100% of setup—lock Sector Alpha-1 today for ₹2,999.", items: ["5-Page Mobile Clinic Website + SSL + Smile Gallery (₹11,500)", "24/7 Automated WhatsApp OPD Slot Booking Assistant (₹4,500)", "Waiting Room 5-Star Google Rating Shield QR Funnel (₹2,500)"] }
+    ];
+
+    const params = new URLSearchParams(window.location.search);
+    const rawLeadParam = params.get("rank") || params.get("lead") || "21";
+    const rankParam = parseInt(String(rawLeadParam).replace(/[^0-9]/g, "") || "21", 10);
+    const baseClinic = CLINIC_DATA.find(c => c.rank === rankParam) || CLINIC_DATA[0];
+
+    const activeClinic = {
+      name: params.get("name") || baseClinic.name,
+      doc: params.get("doc") || baseClinic.doc,
+      spec: params.get("spec") || baseClinic.spec,
+      loc: params.get("loc") || baseClinic.loc,
+      phone: params.get("phone") || baseClinic.phone,
+      setup: parseInt(params.get("setup") || baseClinic.setup, 10),
+      monthly: parseInt(params.get("monthly") || baseClinic.monthly, 10),
+      pkg: baseClinic.pkg,
+      gap: baseClinic.gap,
+      roi: baseClinic.roi,
+      items: baseClinic.items
+    };
+
+    let selectedTreatment = "Painless Root Canal (RCT) & Crown";
+    let selectedSlot = "05:30 PM (Evening OPD)";
+
+    function formatINR(n) {
+      return "₹" + Number(n || 0).toLocaleString("en-IN");
+    }
+
+    function initPreview() {
+      const sectorShort = activeClinic.loc.split(",")[0];
+      document.getElementById("page-title").textContent = `${activeClinic.name} — Live Booking Prototype (${sectorShort})`;
+      document.getElementById("banner-for-doc").textContent = `Prepared for ${activeClinic.doc} (${activeClinic.name})`;
+      const balanceAfterDeposit = Math.max(0, activeClinic.setup - 2999);
+      document.getElementById("banner-quote-pill").textContent = `Slot-Lock Deposit: ₹2,999 • Balance ${formatINR(balanceAfterDeposit)} After Live Launch`;
+      document.getElementById("clinic-sector-badge").textContent = `📍 ${sectorShort}`;
+      document.getElementById("clinic-name").textContent = activeClinic.name;
+      document.getElementById("clinic-sub").textContent = activeClinic.spec;
+      document.getElementById("clinic-address").textContent = activeClinic.loc;
+      document.getElementById("clinic-doc-badge").textContent = activeClinic.doc;
+
+      document.getElementById("audit-package-title").textContent = activeClinic.pkg;
+      document.getElementById("audit-gap-box").textContent = `🔍 Bottleneck Solved: ${activeClinic.gap}`;
+      document.getElementById("audit-roi-box").textContent = activeClinic.roi;
+
+      const ul = document.getElementById("audit-deliverables");
+      ul.innerHTML = "";
+      activeClinic.items.forEach(item => {
+        const li = document.createElement("li");
+        li.textContent = `✓ ${item}`;
+        ul.appendChild(li);
+      });
+
+      document.getElementById("footer-clinic-label").textContent = `Lock ${sectorShort} Exclusivity for ${activeClinic.name}:`;
+      document.getElementById("footer-price-label").textContent = `Balance ${formatINR(balanceAfterDeposit)} payable only after live 5-day delivery (Total: ${formatINR(activeClinic.setup)})`;
+      const cleanPhone = activeClinic.phone.replace(/[^0-9]/g, "");
+      const approveMsg = encodeURIComponent(`Hi Gopal, I just reviewed the live prototype for ${activeClinic.name} (${sectorShort}) and want to lock our sector with the ₹2,999 deposit.`);
+      document.getElementById("footer-approve-btn").href = `https://wa.me/${cleanPhone}?text=${approveMsg}`;
+
+      updateSimulatedPreview();
+    }
+
+    async function completeDepositAndRedirect(paymentId) {
+      if (window.recordDepositInFirestore) {
+        await window.recordDepositInFirestore(rankParam, activeClinic.setup, paymentId);
+      }
+      const obParams = new URLSearchParams({
+        rank: rankParam,
+        name: activeClinic.name,
+        setup: activeClinic.setup,
+        phone: activeClinic.phone,
+        payment_id: paymentId
+      });
+      window.location.href = `/onboarding.html?${obParams.toString()}`;
+    }
+
+    function openRazorpayDepositCheckout() {
+      const rzpKey = params.get("rzp_key") || localStorage.getItem("indian_bison_rzp_key") || "";
+      const sectorShort = activeClinic.loc.split(",")[0];
+
+      if (rzpKey && window.Razorpay) {
+        const options = {
+          key: rzpKey,
+          amount: 299900, // ₹2,999.00 in paise
+          currency: "INR",
+          name: "Indian Bison Digital Growth",
+          description: `₹2,999 Slot-Lock Deposit — ${activeClinic.name} (${sectorShort})`,
+          prefill: {
+            name: activeClinic.doc,
+            contact: activeClinic.phone
+          },
+          notes: {
+            clinic_rank: String(rankParam),
+            clinic_name: activeClinic.name,
+            total_setup_inr: String(activeClinic.setup),
+            balance_on_delivery_inr: String(Math.max(0, activeClinic.setup - 2999))
+          },
+          theme: { color: "#10b981" },
+          handler: function(response) {
+            completeDepositAndRedirect(response.razorpay_payment_id || `pay_live_${Date.now()}`);
+          }
+        };
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+      } else {
+        // Instant Sandbox / Demo Checkout Modal if live Razorpay Key ID is not yet pasted
+        const confirmDemo = confirm(
+          `[Razorpay ₹2,999/- Slot-Lock Deposit Checkout]\n\n` +
+          `Clinic: ${activeClinic.name} (${activeClinic.doc})\n` +
+          `Package: ${activeClinic.pkg}\n` +
+          `Payable Now (Slot-Lock Deposit): ₹2,999.00 via UPI / Card\n` +
+          `Balance After 5-Day Delivery: ${formatINR(Math.max(0, activeClinic.setup - 2999))}\n\n` +
+          `Click OK to simulate instant Razorpay UPI payment capture and auto-close this lead to 'Booked' in Cloud Firestore!`
+        );
+        if (confirmDemo) {
+          completeDepositAndRedirect(`pay_sim_${Date.now()}`);
+        }
+      }
+    }
+
+    function selectTreatment(t) {
+      selectedTreatment = t;
+      document.querySelectorAll(".treat-btn").forEach(btn => {
+        if (btn.textContent.includes(t.split(" ")[1])) {
+          btn.className = "treat-btn px-3 py-2 rounded-lg border border-emerald-500 bg-emerald-500/15 text-white font-semibold text-left";
+        } else {
+          btn.className = "treat-btn px-3 py-2 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 text-left";
+        }
+      });
+      updateSimulatedPreview();
+    }
+
+    function selectSlot(s) {
+      selectedSlot = s;
+      document.querySelectorAll(".slot-btn").forEach(btn => {
+        if (s.startsWith(btn.textContent.trim().replace(" ★", ""))) {
+          btn.className = "slot-btn px-2.5 py-2 rounded-lg border border-emerald-500 bg-emerald-500/15 text-white font-semibold";
+        } else {
+          btn.className = "slot-btn px-2.5 py-2 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 font-medium";
+        }
+      });
+      updateSimulatedPreview();
+    }
+
+    function updateSimulatedPreview() {
+      const pName = document.getElementById("patient-name").value.trim() || "Patient";
+      const sectorShort = activeClinic.loc.split(",")[0];
+      const msg = `Hi ${activeClinic.doc} (${activeClinic.name}), I'd like to book an appointment:\n• Patient: ${pName}\n• Treatment: ${selectedTreatment}\n• Preferred Slot: ${selectedSlot}\n• Location: ${sectorShort} (Please send Google Maps Pin)`;
+      document.getElementById("simulated-wa-text").textContent = msg;
+    }
+
+    function testPatientBooking() {
+      const cleanPhone = activeClinic.phone.replace(/[^0-9]/g, "");
+      const msg = encodeURIComponent(document.getElementById("simulated-wa-text").textContent);
+      window.open(`https://wa.me/${cleanPhone}?text=${msg}`, "_blank");
+    }
+
+    function testReviewShield(stars) {
+      const box = document.getElementById("review-shield-result");
+      if (stars >= 4) {
+        box.className = "p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-xs text-emerald-200";
+        box.innerHTML = `✓ <strong>${stars}★ Tapped (Public Google Review):</strong> Patient is routed directly to ${activeClinic.name}'s Google Maps review box to boost your public star rating!`;
+      } else {
+        box.className = "p-3 rounded-xl bg-amber-950/40 border border-amber-500/30 text-xs text-amber-200";
+        box.innerHTML = `🛡️ <strong>${stars}★ Intercepted Privately:</strong> Instead of posting a public 1–3★ complaint on Google Maps, this opens a private WhatsApp feedback note directly to ${activeClinic.doc}!`;
+      }
+    }
+
+    initPreview();
+  </script>
+</body>
+</html>

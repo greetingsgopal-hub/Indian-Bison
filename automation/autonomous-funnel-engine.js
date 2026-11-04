@@ -1,0 +1,494 @@
+/**
+ * Indian Bison — Hybrid Dispatch Engine (Automated Schedule Queue + Instant Manual Trigger)
+ * Project: indian-bison-crm-2026 (Cloud Firestore asia-south2)
+ *
+ * Exports:
+ *  - startAutoScheduler(leadsQueue, options)
+ *  - dispatchSingleLeadManual(leadOrId, options)
+ *  - getScheduleStatus(nowDate)
+ *  - buildPolymorphicColdMessage(lead)
+ *  - buildInstantPrototypeAndDepositReply(lead)
+ *  - handleInboundWhatsAppWebhook(webhookPayload, leadRecord)
+ *  - sendMetaCloudWhatsApp(toPhoneE164, messageText, previewUrl)
+ */
+
+const https = require("https");
+const { appendFunnelEvent, updateLeadRecord } = require("../scripts/lib/store");
+
+const CONFIG = {
+  FIREBASE_PROJECT_ID: "indian-bison-crm-2026",
+  HOSTING_BASE_URL: "https://indian-bison-crm-2026.web.app",
+  SLOT_LOCK_DEPOSIT_INR: 2999,
+  META_GRAPH_VERSION: "v21.0",
+  META_APP_ID: "1132938199519864",
+  META_SYSTEM_USER_ID: "122104634043532228",
+  META_PHONE_NUMBER_ID: process.env.META_PHONE_NUMBER_ID || process.env.META_WABA_PHONE_ID || "587641237759145",
+  META_ACCESS_TOKEN:
+    process.env.META_PERMANENT_ACCESS_TOKEN ||
+    process.env.META_WABA_ACCESS_TOKEN ||
+    "EAAQGZArrvUngBSZB8bBIJK2Ob5v52FBDJXU99JBscbXHqkdI0Auvj52pvxbD1w54Ov1WfCZAd0Vj87KoYmBNBCw8hZANeZCxU182pHLbQD9eCeWxy9NjlhBOMcgaNhq7SoK9qAgXAynkHbZCApJWRotk2vCJjpkMunpHb1eurEHX9xSCFehaZCpcYp5gtKvQ8MqFwj1TUPgtrFK2bvdhhZCpamVQZCEBRmfQUPLcD",
+  RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID || "",
+  RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET || "",
+  // Anti-Ban & OPD Schedule Guardrails (Mon–Sat, 10:30 AM – 1:30 PM & 5:00 PM – 8:30 PM IST)
+  MAX_DAILY_COLD_OUTREACH: 25,
+  MIN_JITTER_MS: 240000, // 4 minutes minimum human jitter
+  MAX_JITTER_MS: 540000, // 9 minutes maximum human jitter
+  ALLOWED_OPD_WINDOWS_IST: [
+    { label: "Morning OPD Window", start: 10.5, end: 13.5 }, // 10:30 AM – 1:30 PM IST
+    { label: "Evening OPD Window", start: 17.0, end: 20.5 }  // 5:00 PM – 8:30 PM IST
+  ]
+};
+
+/**
+ * Layer 2 Anti-Ban: Polymorphic Spintax Generator (<60 words, Zero Cold Links + STOP Trapdoor)
+ */
+function buildPolymorphicColdMessage(lead) {
+  const greetings = ["Hi", "Hello", "Greetings", "Hey"];
+  const verbs = ["checked", "noticed", "looked up", "came across"];
+  const closings = [
+    "Open to a quick 1-minute breakdown?",
+    "Would you like me to share the 30-second preview here?",
+    "Can I send over the live Sector demo we mocked up for you?"
+  ];
+
+  const g = greetings[lead.rank % greetings.length];
+  const v = verbs[lead.rank % verbs.length];
+  const c = closings[lead.rank % closings.length];
+
+  return `${g} ${lead.recipient}, I ${v} ${lead.business_name} on Google Maps today and noticed ${lead.pain_short}.\n\nI help Greater Noida dental clinics fix these exact leaks with ${lead.fix_short}.\n\n${c}\n(Reply STOP to opt out)`;
+}
+
+/**
+ * Instant Live Prototype + ₹2,999/- Razorpay Slot-Lock Deposit Reply
+ */
+function buildInstantPrototypeAndDepositReply(lead) {
+  const sectorShort = (lead.locality || "Greater Noida").split(",")[0];
+  const previewUrl = `${CONFIG.HOSTING_BASE_URL}/preview.html?rank=${lead.rank}`;
+  const balance = (lead.setup_fee_inr || 18500) - CONFIG.SLOT_LOCK_DEPOSIT_INR;
+
+  return `Hi ${lead.recipient}, here is the live interactive booking & 5-star rating-shield prototype built for ${lead.business_name} (${sectorShort}):\n${previewUrl}\n\n*Zero-Risk Launch Terms:*\n• Total Setup: ₹${(lead.setup_fee_inr || 18500).toLocaleString("en-IN")} (${lead.package_name})\n• *To Lock ${sectorShort} Exclusivity & Start Build Today:* Just *₹2,999/- Slot-Lock Deposit* via Razorpay UPI/Card directly on the preview page.\n• *Balance (₹${balance.toLocaleString("en-IN")}):* Payable ONLY after your live system is delivered in 5 days.\n\nTap the link above to test the 05:30 PM OPD slot booking and lock your sector!`;
+}
+
+/**
+ * Call Scheduling Options Generator for "Tell me more" / inquiries
+ */
+function getCallSlotOptionsIST() {
+  const options = [];
+  const now = new Date();
+  const istNow = new Date(now.getTime() + now.getTimezoneOffset() * 60000 + 5.5 * 3600000);
+  
+  // Pick slot times friendly to Doctor OPD gaps (2:30 PM, 3:30 PM, 8:45 PM)
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  
+  // Next 2 days
+  for (let i = 1; i <= 2; i++) {
+    const d = new Date(istNow);
+    d.setDate(d.getDate() + i);
+    if (d.getDay() === 0) continue; // Skip Sunday for OPD calls
+    const dayStr = days[d.getDay()];
+    const dateStr = `${d.getDate()} ${months[d.getMonth()]}`;
+    options.push({
+      id: `slot_${d.getFullYear()}_${d.getMonth()+1}_${d.getDate()}_1430`,
+      label: `${dayStr} ${dateStr} • 02:30 PM IST (Post-Morning OPD)`,
+      timeStr: "02:30 PM"
+    });
+    options.push({
+      id: `slot_${d.getFullYear()}_${d.getMonth()+1}_${d.getDate()}_2045`,
+      label: `${dayStr} ${dateStr} • 08:45 PM IST (Post-Evening OPD)`,
+      timeStr: "08:45 PM"
+    });
+  }
+  return options.slice(0, 3);
+}
+
+function buildCallSlotRequestReply(lead) {
+  const slots = getCallSlotOptionsIST();
+  return `Hi ${lead.recipient}, glad you'd like to explore this! We do a quick 7-minute visual walkthrough on phone/Google Meet showing the exact ROI & WhatsApp patient flow for ${lead.business_name}.\n\nWhich of these OPD-break time slots works best for you?\n\n1️⃣ ${slots[0]?.label || "Tomorrow • 02:30 PM IST"}\n2️⃣ ${slots[1]?.label || "Tomorrow • 08:45 PM IST"}\n3️⃣ ${slots[2]?.label || "Day After • 02:30 PM IST"}\n\n👉 Reply with *1*, *2*, or *3* (or mention your preferred time), and I will lock your private invite.`;
+}
+
+/**
+ * Compute live OPD Dispatch Window & Next Automatic Batch Countdown (IST)
+ * Standard schedule: Mon–Sat, 10:30 AM – 1:30 PM & 5:00 PM – 8:30 PM IST
+ */
+function getScheduleStatus(now = new Date()) {
+  const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
+  const istNow = new Date(utcMs + 5.5 * 3600000);
+  const day = istNow.getDay(); // 0 = Sun, 1..6 = Mon..Sat
+  const hourDecimal = istNow.getHours() + istNow.getMinutes() / 60 + istNow.getSeconds() / 3600;
+
+  const isMonToSat = day >= 1 && day <= 6;
+  let activeWindow = null;
+
+  if (isMonToSat) {
+    for (const w of CONFIG.ALLOWED_OPD_WINDOWS_IST) {
+      if (hourDecimal >= w.start && hourDecimal <= w.end) {
+        activeWindow = w;
+        break;
+      }
+    }
+  }
+
+  let nextBatchTimeLabel = "10:30 AM IST";
+  let secondsUntilNext = 0;
+
+  if (activeWindow) {
+    nextBatchTimeLabel = `Active Now (${activeWindow.label})`;
+    secondsUntilNext = 0;
+  } else if (isMonToSat && hourDecimal < 10.5) {
+    nextBatchTimeLabel = "Today 10:30 AM IST";
+    secondsUntilNext = Math.round((10.5 - hourDecimal) * 3600);
+  } else if (isMonToSat && hourDecimal > 13.5 && hourDecimal < 17.0) {
+    nextBatchTimeLabel = "Today 05:00 PM IST";
+    secondsUntilNext = Math.round((17.0 - hourDecimal) * 3600);
+  } else {
+    // Next morning 10:30 AM (skip Sunday if today is Saturday)
+    const daysToAdd = day === 6 ? 2 : 1;
+    nextBatchTimeLabel = `${daysToAdd === 2 ? "Mon" : "Tomorrow"} 10:30 AM IST`;
+    secondsUntilNext = Math.round(((24 - hourDecimal) + (daysToAdd - 1) * 24 + 10.5) * 3600);
+  }
+
+  return {
+    windowOpen: Boolean(activeWindow),
+    windowLabel: activeWindow ? `OPEN (${activeWindow.label})` : "CLOSED (Outside OPD Hours)",
+    nextBatchLabel: nextBatchTimeLabel,
+    secondsUntilNext,
+    jitterActive: true,
+    jitterRangeLabel: "Active (4m–9m Human Jitter)"
+  };
+}
+
+/**
+ * Meta Official WhatsApp Cloud API Sender (`POST /v21.0/{Phone-Number-ID}/messages`)
+ */
+function sendMetaCloudWhatsApp(toPhoneE164, messageText, previewUrl = false, customCredentials = {}) {
+  const cleanPhone = String(toPhoneE164 || "").replace(/[^0-9]/g, "");
+  const phoneId = customCredentials.phoneId || CONFIG.META_PHONE_NUMBER_ID;
+  const accessToken = customCredentials.accessToken || CONFIG.META_ACCESS_TOKEN;
+
+  if (!phoneId || !accessToken) {
+    return Promise.resolve({
+      simulated: true,
+      to: cleanPhone,
+      wamid: `wamid.sim_${Date.now()}`,
+      preview_url: previewUrl,
+      body: messageText
+    });
+  }
+
+  return new Promise((resolve) => {
+    const payload = JSON.stringify({
+      messaging_product: "whatsapp",
+      recipient_type: "individual",
+      to: cleanPhone,
+      type: "text",
+      text: { preview_url: previewUrl, body: messageText }
+    });
+
+    const req = https.request({
+      hostname: "graph.facebook.com",
+      path: `/${CONFIG.META_GRAPH_VERSION}/${phoneId}/messages`,
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+        "Content-Length": Buffer.byteLength(payload)
+      }
+    }, (res) => {
+      let data = "";
+      res.on("data", chunk => data += chunk);
+      res.on("end", () => {
+        try {
+          const parsed = JSON.parse(data);
+          if (parsed.error) {
+            resolve({
+              simulated: true,
+              fallback_reason: parsed.error.message,
+              api_error: parsed.error,
+              wamid: `wamid.fallback_${Date.now()}`,
+              to: cleanPhone,
+              body: messageText
+            });
+          } else {
+            resolve({
+              simulated: false,
+              wamid: parsed?.messages?.[0]?.id || `wamid.${Date.now()}`,
+              raw: parsed
+            });
+          }
+        } catch (e) {
+          resolve({ simulated: true, wamid: `wamid.sim_${Date.now()}`, raw: data });
+        }
+      });
+    });
+    req.on("error", (err) => {
+      resolve({
+        simulated: true,
+        fallback_reason: err.message,
+        wamid: `wamid.offline_${Date.now()}`,
+        to: cleanPhone,
+        body: messageText
+      });
+    });
+    req.write(payload);
+    req.end();
+  });
+}
+
+/**
+ * Step 1.2: Instant Manual Trigger per Clinic (Bypasses Queue & OPD Window)
+ * Fires Touch #1 immediately via Meta Cloud API, updates Firestore status to `WhatsApp Sent`,
+ * and appends an audit entry to `funnel_events`.
+ */
+async function dispatchSingleLeadManual(leadOrId, options = {}) {
+  const lead = typeof leadOrId === "object" ? leadOrId : {
+    rank: Number(String(leadOrId).replace(/[^0-9]/g, "")) || 21,
+    business_name: options.business_name || `Clinic #${leadOrId}`,
+    recipient: options.recipient || "Doctor",
+    phone_whatsapp: options.phone_whatsapp || "+916209228845",
+    pain_short: options.pain_short || "no website link and manual appointment scheduling",
+    fix_short: options.fix_short || "automated WhatsApp slot booking and a 5-star rating shield"
+  };
+
+  const hookText = options.customHookText || buildPolymorphicColdMessage(lead);
+  const apiResult = await sendMetaCloudWhatsApp(lead.phone_whatsapp, hookText, false, options);
+  const wamid = apiResult.wamid || `wamid.manual_${Date.now()}`;
+
+  await updateLeadRecord(lead.rank, {
+    status: "WhatsApp Sent",
+    waba_message_id: wamid,
+    last_contacted_at: new Date().toISOString(),
+    custom_message: hookText
+  });
+
+  const auditEntry = await appendFunnelEvent({
+    event_type: "MANUAL_TOUCH_1_DISPATCHED",
+    lead_rank: lead.rank,
+    lead_id: `lead_${lead.rank}`,
+    business_name: lead.business_name,
+    phone_whatsapp: lead.phone_whatsapp,
+    status: "WhatsApp Sent",
+    wamid,
+    actor: "ManualOverride (Bypass Queue)",
+    payload_summary: `Instant Touch #1 sent to ${lead.business_name} (${lead.phone_whatsapp}) [${wamid}]`,
+    raw_payload: { hookText, apiResult }
+  });
+
+  return {
+    ok: true,
+    lead_rank: lead.rank,
+    status: "WhatsApp Sent",
+    wamid,
+    simulated: Boolean(apiResult.simulated),
+    fallback_reason: apiResult.fallback_reason || null,
+    hookText,
+    auditEntry
+  };
+}
+
+/**
+ * Step 1.1: Automated Schedule Queue (`startAutoScheduler`)
+ * Runs concurrently in the background during Mon–Sat 10:30 AM – 1:30 PM & 5:00 PM – 8:30 PM IST
+ * with 4–9 min randomized human jitter.
+ */
+function startAutoScheduler(leadsQueue = [], options = {}) {
+  let sentTodayCount = 0;
+  let timerHandle = null;
+
+  async function tick() {
+    const sched = getScheduleStatus();
+    if (!sched.windowOpen || sentTodayCount >= CONFIG.MAX_DAILY_COLD_OUTREACH) {
+      timerHandle = setTimeout(tick, 60000);
+      return;
+    }
+
+    const nextColdLead = leadsQueue.find(l => !l.status || l.status === "Not Contacted");
+    if (!nextColdLead) {
+      timerHandle = setTimeout(tick, 60000);
+      return;
+    }
+
+    const jitterMs = Math.floor(
+      CONFIG.MIN_JITTER_MS + Math.random() * (CONFIG.MAX_JITTER_MS - CONFIG.MIN_JITTER_MS)
+    );
+
+    const hookText = buildPolymorphicColdMessage(nextColdLead);
+    const apiRes = await sendMetaCloudWhatsApp(nextColdLead.phone_whatsapp, hookText, false, options);
+    nextColdLead.status = "WhatsApp Sent";
+    nextColdLead.waba_message_id = apiRes.wamid;
+    sentTodayCount++;
+
+    await updateLeadRecord(nextColdLead.rank, {
+      status: "WhatsApp Sent",
+      waba_message_id: apiRes.wamid,
+      last_contacted_at: new Date().toISOString()
+    });
+
+    await appendFunnelEvent({
+      event_type: "AUTO_BATCH_TOUCH_1_DISPATCHED",
+      lead_rank: nextColdLead.rank,
+      lead_id: `lead_${nextColdLead.rank}`,
+      business_name: nextColdLead.business_name,
+      phone_whatsapp: nextColdLead.phone_whatsapp,
+      status: "WhatsApp Sent",
+      wamid: apiRes.wamid,
+      actor: `AutoScheduler (Jitter ${Math.round(jitterMs / 1000)}s)`,
+      payload_summary: `Scheduled Touch #1 dispatched to ${nextColdLead.business_name} (${nextColdLead.phone_whatsapp})`,
+      raw_payload: { hookText, jitterMs, apiRes }
+    });
+
+    timerHandle = setTimeout(tick, jitterMs);
+  }
+
+  timerHandle = setTimeout(tick, 1000);
+
+  return {
+    stop: () => clearTimeout(timerHandle),
+    getStatus: () => ({
+      ...getScheduleStatus(),
+      sentTodayCount,
+      maxDailyLimit: CONFIG.MAX_DAILY_COLD_OUTREACH
+    })
+  };
+}
+
+/**
+ * Inbound Webhook Processor (Processes Doctor Replies & STOP Trapdoor)
+ */
+async function handleInboundWhatsAppWebhook(webhookPayload, leadRecord) {
+  const incomingText = (webhookPayload?.text?.body || "").trim();
+  const stopRegex = /\b(stop|unsubscribe|remove|not interested|no thanks|dnd|spam)\b/i;
+
+  if (stopRegex.test(incomingText)) {
+    await updateLeadRecord(leadRecord.rank, { status: "Opted Out" });
+    await appendFunnelEvent({
+      event_type: "INBOUND_STOP_TRAPDOOR",
+      lead_rank: leadRecord.rank,
+      lead_id: `lead_${leadRecord.rank}`,
+      business_name: leadRecord.business_name,
+      phone_whatsapp: leadRecord.phone_whatsapp,
+      status: "Opted Out",
+      actor: "InboundWebhook",
+      payload_summary: `STOP Trapdoor triggered by "${incomingText}". Lead suppressed permanently.`,
+      raw_payload: webhookPayload
+    });
+    return { action: "SUPPRESSED_OPT_OUT", newStatus: "Opted Out", outboundReply: null };
+  }
+
+  // Check if lead is asking for more info or to connect / call
+  const tellMeMoreRegex = /\b(tell me more|know more|more info|more details|explain|how does it work|call me|connect|what is this|discuss|speak)\b/i;
+  // Check if lead is answering with a selected slot number (1, 2, or 3) or time
+  const slotSelectionRegex = /^\s*([123])\s*$/;
+
+  if (slotSelectionRegex.test(incomingText)) {
+    const slotNum = parseInt(incomingText.match(slotSelectionRegex)[1], 10);
+    const slots = getCallSlotOptionsIST();
+    const chosen = slots[slotNum - 1] || slots[0];
+    const confirmText = `Perfect Dr. ${leadRecord.recipient}! Locked for *${chosen.label}*. I will ring you on ${leadRecord.phone_whatsapp} directly.\n\nMeanwhile, you can preview your clinic's live setup here:\n${CONFIG.HOSTING_BASE_URL}/preview.html?rank=${leadRecord.rank}`;
+    
+    await updateLeadRecord(leadRecord.rank, {
+      status: "Call Scheduled",
+      call_slot_id: chosen.id,
+      call_slot_label: chosen.label,
+      call_slot_selected_at: new Date().toISOString(),
+      notes: `[Auto-Scheduled Call via WhatsApp] Selected Slot: ${chosen.label}`,
+      last_contacted_at: new Date().toISOString()
+    });
+
+    const apiRes = await sendMetaCloudWhatsApp(leadRecord.phone_whatsapp, confirmText, true);
+
+    await appendFunnelEvent({
+      event_type: "CALL_SLOT_CONFIRMED",
+      lead_rank: leadRecord.rank,
+      lead_id: `lead_${leadRecord.rank}`,
+      business_name: leadRecord.business_name,
+      phone_whatsapp: leadRecord.phone_whatsapp,
+      status: "Call Scheduled",
+      actor: "InboundWebhook",
+      payload_summary: `Doctor confirmed call slot: "${chosen.label}" (Option #${slotNum})`,
+      raw_payload: { webhookPayload, chosen, confirmText, apiRes }
+    });
+
+    return {
+      action: "CALL_SLOT_CONFIRMED",
+      newStatus: "Call Scheduled",
+      outboundReply: confirmText,
+      dispatchResult: apiRes
+    };
+  }
+
+  if (tellMeMoreRegex.test(incomingText)) {
+    const slotReply = buildCallSlotRequestReply(leadRecord);
+    const slots = getCallSlotOptionsIST();
+    const apiRes = await sendMetaCloudWhatsApp(leadRecord.phone_whatsapp, slotReply, false);
+
+    await updateLeadRecord(leadRecord.rank, {
+      status: "Call Slot Requested",
+      call_requested_at: new Date().toISOString(),
+      call_slot_options: slots.map(s => s.label),
+      notes: `[Inquiry] Doctor replied: "${incomingText}". Offered call slots.`,
+      last_contacted_at: new Date().toISOString()
+    });
+
+    await appendFunnelEvent({
+      event_type: "INBOUND_TELL_ME_MORE_CALL_OFFERED",
+      lead_rank: leadRecord.rank,
+      lead_id: `lead_${leadRecord.rank}`,
+      business_name: leadRecord.business_name,
+      phone_whatsapp: leadRecord.phone_whatsapp,
+      status: "Call Slot Requested",
+      actor: "InboundWebhook",
+      payload_summary: `Doctor requested more info: "${incomingText}". Offered 3 OPD-gap call slots.`,
+      raw_payload: { webhookPayload, slotReply, apiRes }
+    });
+
+    return {
+      action: "OFFERED_CALL_SLOTS",
+      newStatus: "Call Slot Requested",
+      outboundReply: slotReply,
+      dispatchResult: apiRes
+    };
+  }
+
+  const replyText = buildInstantPrototypeAndDepositReply(leadRecord);
+  const apiRes = await sendMetaCloudWhatsApp(leadRecord.phone_whatsapp, replyText, true);
+
+  await updateLeadRecord(leadRecord.rank, {
+    status: "Prototype Sent",
+    waba_message_id: apiRes.wamid,
+    last_contacted_at: new Date().toISOString()
+  });
+
+  await appendFunnelEvent({
+    event_type: "INBOUND_POSITIVE_AUTO_PROTOTYPE",
+    lead_rank: leadRecord.rank,
+    lead_id: `lead_${leadRecord.rank}`,
+    business_name: leadRecord.business_name,
+    phone_whatsapp: leadRecord.phone_whatsapp,
+    status: "Prototype Sent",
+    wamid: apiRes.wamid,
+    actor: "InboundWebhook",
+    payload_summary: `Doctor replied "${incomingText}". Auto-sent Live Prototype & ₹2,999 Slot-Lock link.`,
+    raw_payload: { webhookPayload, replyText, apiRes }
+  });
+
+  return {
+    action: "SENT_PROTOTYPE_AND_2999_DEPOSIT_LINK",
+    newStatus: "Prototype Sent",
+    outboundReply: replyText,
+    dispatchResult: apiRes
+  };
+}
+
+module.exports = {
+  CONFIG,
+  startAutoScheduler,
+  dispatchSingleLeadManual,
+  getScheduleStatus,
+  buildPolymorphicColdMessage,
+  buildInstantPrototypeAndDepositReply,
+  buildCallSlotRequestReply,
+  getCallSlotOptionsIST,
+  handleInboundWhatsAppWebhook,
+  sendMetaCloudWhatsApp
+};

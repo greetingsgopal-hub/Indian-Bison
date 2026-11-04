@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: indian-bison-whatsapp-webhook
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm install
+    startCommand: node scripts/webhook-receiver.js
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: META_APP_ID
+        value: 1132938199519864
+      - key: META_PHONE_NUMBER_ID
+        value: 587641237759145
+      - key: META_WEBHOOK_VERIFY_TOKEN
+        value: indian_bison_secret_2026
+      - key: META_PERMANENT_ACCESS_TOKEN
+        value: EAAQGZArrvUngBSZB8bBIJK2Ob5v52FBDJXU99JBscbXHqkdI0Auvj52pvxbD1w54Ov1WfCZAd0Vj87KoYmBNBCw8hZANeZCxU182pHLbQD9eCeWxy9NjlhBOMcgaNhq7SoK9qAgXAynkHbZCApJWRotk2vCJjpkMunpHb1eurEHX9xSCFehaZCpcYp5gtKvQ8MqFwj1TUPgtrFK2bvdhhZCpamVQZCEBRmfQUPLcD
+      - key: RAZORPAY_KEY_ID
+        value: rzp_test_indian_bison
+      - key: RAZORPAY_KEY_SECRET
+        value: indian_bison_rzp_secret
+      - key: FIREBASE_PROJECT_ID
+        value: indian-bison-crm-2026
+      - key: SLOT_LOCK_DEPOSIT_INR
+        value: 2999

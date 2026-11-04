@@ -1,0 +1,17 @@
+{
+  "name": "Indian Bison — Local Lead & WhatsApp CRM",
+  "short_name": "Indian Bison CRM",
+  "description": "Daily local business lead generation, psychological hook studio, and WhatsApp outreach CRM.",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#090d16",
+  "theme_color": "#10b981",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

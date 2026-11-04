@@ -1,0 +1,447 @@
+rules_version = '2';
+
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// This security rules file assumes the following data structures:
+//
+// Collection: leads
+// Document ID: {leadId} (e.g., lead_1 .. lead_20 or auto-generated ID)
+// Fields:
+//   - rank: number (required, >= 1, <= 10000, immutable on update) - Lead priority rank
+//   - urgency_tier: string (required, 1..100 chars) - Urgency tier label (e.g., "Tier 1", "CRITICAL (Tier 1)")
+//   - urgency_score: number (required, 0..100) - Computed composite urgency score
+//   - business_name: string (required, 1..200 chars) - Clinic or business display name
+//   - recipient: string (required, 1..120 chars) - Doctor or decision-maker recipient name
+//   - sub_category: string (required, 0..200 chars) - Clinical specialty / sub-category
+//   - locality: string (required, 0..300 chars) - Sector / locality address in Greater Noida
+//   - rating: number (required, 1.0..5.0) - Google Business Profile star rating
+//   - total_reviews: number (required, >= 0, <= 1000000) - Total Google review count
+//   - phone_whatsapp: string (required, 1..20 chars, matches E.164 +91[6-9][0-9]{9} or valid phone string) - WhatsApp outreach number
+//   - website_url: string (required, 0..500 chars) - Website URL or status token (e.g., "MISSING_WEBSITE")
+//   - operational_friction: bool (required) - Whether 1-2 star operational friction was detected
+//   - friction_details: string (required, 0..1000 chars) - Summary of digital/operational leaks
+//   - recommended_pitch: string (required, 0..1000 chars) - Recommended service pitch
+//   - status: string (required, enum: "Not Contacted", "WhatsApp Sent", "Follow-Up 1 Sent", "Follow-Up 2 Sent", "Breakup Sent", "Replied", "Prototype Sent", "Quote Sent", "Deposit Paid", "Booked", "Onboarding Completed", "Opted Out", "FAILED_DELIVERY", "STALLED_AFTER_YES", "PAYMENT_PENDING") - Outreach pipeline status
+//   - notes: string (optional, 0..2000 chars) - Operator CRM notes
+//   - custom_message: string (required, 0..1000 chars) - Active WhatsApp outreach message copy
+//   - pain_short: string (optional, 0..500 chars) - Short pain snippet for hook templating
+//   - fix_short: string (optional, 0..500 chars) - Short solution snippet for hook templating
+//   - hook_variants: map (optional, allowed keys: ['default', 'pain', 'social', 'micro', 'followup_day3', 'followup_day6', 'followup_day10', 'voice_note'], values <= 1000 chars) - Prebuilt message & follow-up hooks
+//   - category: string (optional, 0..150 chars) - Primary business category
+//   - operational_friction_1_2_star: bool (optional) - Raw audit boolean flag
+//   - filter_criteria_matched: list (optional, max 10 string items <= 300 chars) - Matched qualification criteria
+//   - created_at: timestamp or string (optional, <= 64 chars, immutable on update) - Creation timestamp
+//   - updated_at: timestamp or string (optional, <= 64 chars) - Last modification timestamp
+//   - owner_uid: string (optional, 1..128 chars) - Firebase Auth UID of the operator
+//   - package_name: string (optional, 0..200 chars) - Recommended service package name
+//   - setup_fee_inr: number (optional, 0..10000000) - One-time setup fee in INR
+//   - monthly_retainer_inr: number (optional, 0..1000000) - Monthly retainer fee in INR
+//   - annual_deal_value_inr: number (optional, 0..20000000) - Total 12-month contract value in INR
+//   - roi_anchor: string (optional, 0..500 chars) - Clinic ROI anchor justification
+//   - quotation_items: list (optional, max 10 items, string or map items) - Line-itemized deliverables
+//   - whatsapp_quote_message: string (optional, 0..2500 chars) - Formatted WhatsApp quotation message
+//   - followup_stage: string (optional, 0..100 chars) - Active follow-up cadence stage identifier
+//   - last_contacted_at: timestamp or string (optional, <= 64 chars) - Timestamp of most recent outreach touchpoint
+//   - slot_lock_deposit_inr: number (optional, 0..1000000) - Priority slot-lock deposit amount in INR (e.g., 2999)
+//   - balance_on_delivery_inr: number (optional, 0..10000000) - Remaining setup balance payable after live verification in INR
+//   - deposit_paid: bool (optional) - Whether the slot-lock deposit has been paid
+//   - deposit_paid_at: timestamp or string (optional, <= 64 chars) - Timestamp when deposit payment was captured
+//   - razorpay_payment_id: string (optional, 0..128 chars) - Razorpay payment reference ID
+//   - waba_message_id: string (optional, 0..200 chars) - Meta Official WhatsApp Cloud API message ID (wamid)
+//   - onboarding_completed: bool (optional) - Whether post-payment clinic onboarding form is completed
+//   - onboarding_data: map (optional, max 15 keys) - Post-payment clinic onboarding intake details
+//
+// Collection: funnel_events
+// Document ID: {eventId} (Immutable audit log entries for webhook & diagnostic telemetry)
+// Fields:
+//   - event_type: string (required, 1..100 chars) - Telemetry event type (e.g., WABA_SENT, WABA_DELIVERED, INBOUND_YES, RAZORPAY_CAPTURED)
+//   - timestamp: timestamp or string (required, <= 64 chars) - Event creation timestamp
+//   - lead_rank: number (optional, 0..10000) - Associated lead rank
+//   - lead_id: string (optional, 0..128 chars) - Associated lead document ID
+//   - business_name: string (optional, 0..200 chars) - Associated clinic display name
+//   - phone_whatsapp: string (optional, 0..30 chars) - Associated E.164 phone number
+//   - status: string (optional, 0..100 chars) - Resulting lead or delivery status
+//   - wamid: string (optional, 0..200 chars) - Meta Official WhatsApp Cloud API message ID
+//   - razorpay_payment_id: string (optional, 0..128 chars) - Razorpay payment ID
+//   - actor: string (optional, 0..120 chars) - Subsystem or operator actor identifier
+//   - payload_summary: string (optional, 0..2000 chars) - Human-readable diagnostic summary
+//   - raw_payload: map (max 50 keys) or string (0..5000 chars) (optional) - Raw webhook payload snapshot
+//
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    // Check if the user is authenticated (supports Google Auth, Email/Password, or Anonymous Auth)
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Check if user owns the resource based on explicit userId parameter
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Verify owner_uid hasn't been spoofed on create (if authenticated, must match request.auth.uid; if unauthenticated, cannot set an arbitrary owner_uid)
+    function uidUnchanged() {
+      return !('owner_uid' in request.resource.data) ||
+        (isAuthenticated() && request.resource.data.owner_uid == request.auth.uid);
+    }
+
+    // Ensure owner_uid is not spoofed on update (must either remain unchanged or match the authenticated operator's UID)
+    function uidNotModified() {
+      return !('owner_uid' in request.resource.data) ||
+        (isAuthenticated() && request.resource.data.owner_uid == request.auth.uid) ||
+        ('owner_uid' in resource.data && request.resource.data.owner_uid == resource.data.owner_uid);
+    }
+
+    // Validate required fields exist
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    // Validate that the document contains only the allowed schema fields
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    // Validate required string field length
+    function validStringLength(field, minLen, maxLen) {
+      return request.resource.data[field] is string &&
+        request.resource.data[field].size() >= minLen &&
+        request.resource.data[field].size() <= maxLen;
+    }
+
+    // Validate optional string (if present, must be string and within length bounds)
+    function isValidOptionalString(field, minLen, maxLen) {
+      return !(field in request.resource.data) ||
+        (request.resource.data[field] is string &&
+         request.resource.data[field].size() >= minLen &&
+         request.resource.data[field].size() <= maxLen);
+    }
+
+    // Validate optional number within range
+    function isValidOptionalNumber(field, minVal, maxVal) {
+      return !(field in request.resource.data) ||
+        (request.resource.data[field] is number &&
+         request.resource.data[field] >= minVal &&
+         request.resource.data[field] <= maxVal);
+    }
+
+    // Validate optional boolean field
+    function isValidOptionalBool(field) {
+      return !(field in request.resource.data) ||
+        request.resource.data[field] is bool;
+    }
+
+    // Validate optional timestamp or ISO date string
+    function isValidOptionalTimestampOrDateString(field) {
+      return !(field in request.resource.data) ||
+        request.resource.data[field] is timestamp ||
+        (request.resource.data[field] is string &&
+         request.resource.data[field].size() >= 1 &&
+         request.resource.data[field].size() <= 64);
+    }
+
+    // Validate phone_whatsapp format (+91[6-9][0-9]{9} or standard phone string up to 20 chars)
+    function isValidPhoneWhatsapp(phone) {
+      return phone is string &&
+        phone.size() >= 1 &&
+        phone.size() <= 20 &&
+        (phone.matches("^\\+91[6-9][0-9]{9}$") || phone.matches("^\\+?[0-9 ()-]{7,20}$"));
+    }
+
+    // Validate optional hook_variants map
+    function isValidOptionalHookVariants(data) {
+      return !('hook_variants' in data) ||
+        (data.hook_variants is map &&
+         data.hook_variants.keys().hasOnly([
+           'default',
+           'pain',
+           'social',
+           'micro',
+           'followup_day3',
+           'followup_day6',
+           'followup_day10',
+           'voice_note'
+         ]) &&
+         (!('default' in data.hook_variants) || (data.hook_variants['default'] is string && data.hook_variants['default'].size() <= 1000)) &&
+         (!('pain' in data.hook_variants) || (data.hook_variants['pain'] is string && data.hook_variants['pain'].size() <= 1000)) &&
+         (!('social' in data.hook_variants) || (data.hook_variants['social'] is string && data.hook_variants['social'].size() <= 1000)) &&
+         (!('micro' in data.hook_variants) || (data.hook_variants['micro'] is string && data.hook_variants['micro'].size() <= 1000)) &&
+         (!('followup_day3' in data.hook_variants) || (data.hook_variants['followup_day3'] is string && data.hook_variants['followup_day3'].size() <= 1000)) &&
+         (!('followup_day6' in data.hook_variants) || (data.hook_variants['followup_day6'] is string && data.hook_variants['followup_day6'].size() <= 1000)) &&
+         (!('followup_day10' in data.hook_variants) || (data.hook_variants['followup_day10'] is string && data.hook_variants['followup_day10'].size() <= 1000)) &&
+         (!('voice_note' in data.hook_variants) || (data.hook_variants['voice_note'] is string && data.hook_variants['voice_note'].size() <= 1000)));
+    }
+
+    // Validate optional filter_criteria_matched list
+    function isValidOptionalFilterCriteria(data) {
+      return !('filter_criteria_matched' in data) ||
+        (data.filter_criteria_matched is list &&
+         data.filter_criteria_matched.size() <= 10 &&
+         (data.filter_criteria_matched.size() == 0 ||
+          (data.filter_criteria_matched[0] is string && data.filter_criteria_matched[0].size() <= 300)));
+    }
+
+    // Validate optional quotation_items list (max 10 items, string or map elements bounded)
+    function isValidOptionalQuotationItems(data) {
+      return !('quotation_items' in data) ||
+        (data.quotation_items is list &&
+         data.quotation_items.size() <= 10 &&
+         (data.quotation_items.size() == 0 ||
+          (data.quotation_items[0] is string && data.quotation_items[0].size() <= 300) ||
+          (data.quotation_items[0] is map && data.quotation_items[0].size() <= 10)));
+    }
+
+    // Validate optional onboarding_data map (max 15 keys)
+    function isValidOptionalOnboardingData(data) {
+      return !('onboarding_data' in data) ||
+        (data.onboarding_data is map &&
+         data.onboarding_data.size() <= 15);
+    }
+
+    // Validate optional raw_payload on funnel_events (map <= 50 keys or string <= 5000 chars)
+    function isValidOptionalRawPayload(data) {
+      return !('raw_payload' in data) ||
+        (data.raw_payload is map && data.raw_payload.size() <= 50) ||
+        (data.raw_payload is string && data.raw_payload.size() <= 5000);
+    }
+
+    // Validate that immutable fields have not been modified during an update
+    function areImmutableFieldsUnchanged(fields) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
+    }
+
+    // ===============================================================
+    // Domain Validators (Applied to BOTH create and update)
+    // ===============================================================
+
+    function isValidLead(data) {
+      let requiredFields = [
+        'rank',
+        'urgency_tier',
+        'urgency_score',
+        'business_name',
+        'recipient',
+        'sub_category',
+        'locality',
+        'rating',
+        'total_reviews',
+        'phone_whatsapp',
+        'website_url',
+        'operational_friction',
+        'friction_details',
+        'recommended_pitch',
+        'status',
+        'custom_message'
+      ];
+      let allowedFields = [
+        'rank',
+        'urgency_tier',
+        'urgency_score',
+        'business_name',
+        'recipient',
+        'sub_category',
+        'locality',
+        'rating',
+        'total_reviews',
+        'phone_whatsapp',
+        'website_url',
+        'operational_friction',
+        'friction_details',
+        'recommended_pitch',
+        'status',
+        'notes',
+        'custom_message',
+        'pain_short',
+        'fix_short',
+        'hook_variants',
+        'category',
+        'operational_friction_1_2_star',
+        'filter_criteria_matched',
+        'created_at',
+        'updated_at',
+        'owner_uid',
+        'package_name',
+        'setup_fee_inr',
+        'monthly_retainer_inr',
+        'annual_deal_value_inr',
+        'roi_anchor',
+        'quotation_items',
+        'whatsapp_quote_message',
+        'followup_stage',
+        'last_contacted_at',
+        'slot_lock_deposit_inr',
+        'balance_on_delivery_inr',
+        'deposit_paid',
+        'deposit_paid_at',
+        'razorpay_payment_id',
+        'waba_message_id',
+        'onboarding_completed',
+        'onboarding_data',
+        'call_slot_id',
+        'call_slot_label',
+        'call_slot_iso',
+        'call_slot_selected_at',
+        'call_requested_at',
+        'call_slot_source',
+        'call_slot_options'
+      ];
+      let validStatuses = [
+        'Not Contacted',
+        'WhatsApp Sent',
+        'Follow-Up 1 Sent',
+        'Follow-Up 2 Sent',
+        'Breakup Sent',
+        'Replied',
+        'Prototype Sent',
+        'Quote Sent',
+        'Deposit Paid',
+        'Booked',
+        'Onboarding Completed',
+        'Opted Out',
+        'FAILED_DELIVERY',
+        'STALLED_AFTER_YES',
+        'PAYMENT_PENDING',
+        'Call Slot Requested',
+        'Call Scheduled'
+      ];
+
+      return hasRequiredFields(requiredFields) &&
+        hasOnlyAllowedFields(allowedFields) &&
+        data.rank is number && data.rank >= 1 && data.rank <= 10000 &&
+        validStringLength('urgency_tier', 1, 100) &&
+        data.urgency_score is number && data.urgency_score >= 0 && data.urgency_score <= 100 &&
+        validStringLength('business_name', 1, 200) &&
+        validStringLength('recipient', 1, 120) &&
+        validStringLength('sub_category', 0, 200) &&
+        validStringLength('locality', 0, 300) &&
+        data.rating is number && data.rating >= 1.0 && data.rating <= 5.0 &&
+        data.total_reviews is number && data.total_reviews >= 0 && data.total_reviews <= 1000000 &&
+        isValidPhoneWhatsapp(data.phone_whatsapp) &&
+        validStringLength('website_url', 0, 500) &&
+        data.operational_friction is bool &&
+        validStringLength('friction_details', 0, 1000) &&
+        validStringLength('recommended_pitch', 0, 1000) &&
+        data.status is string && data.status in validStatuses &&
+        isValidOptionalString('notes', 0, 2000) &&
+        validStringLength('custom_message', 0, 1000) &&
+        isValidOptionalString('pain_short', 0, 500) &&
+        isValidOptionalString('fix_short', 0, 500) &&
+        isValidOptionalHookVariants(data) &&
+        isValidOptionalString('category', 0, 150) &&
+        isValidOptionalBool('operational_friction_1_2_star') &&
+        isValidOptionalFilterCriteria(data) &&
+        isValidOptionalTimestampOrDateString('created_at') &&
+        isValidOptionalTimestampOrDateString('updated_at') &&
+        isValidOptionalString('owner_uid', 1, 128) &&
+        isValidOptionalString('package_name', 0, 200) &&
+        isValidOptionalNumber('setup_fee_inr', 0, 10000000) &&
+        isValidOptionalNumber('monthly_retainer_inr', 0, 1000000) &&
+        isValidOptionalNumber('annual_deal_value_inr', 0, 20000000) &&
+        isValidOptionalString('roi_anchor', 0, 500) &&
+        isValidOptionalQuotationItems(data) &&
+        isValidOptionalString('whatsapp_quote_message', 0, 2500) &&
+        isValidOptionalString('followup_stage', 0, 100) &&
+        isValidOptionalTimestampOrDateString('last_contacted_at') &&
+        isValidOptionalNumber('slot_lock_deposit_inr', 0, 1000000) &&
+        isValidOptionalNumber('balance_on_delivery_inr', 0, 10000000) &&
+        isValidOptionalBool('deposit_paid') &&
+        isValidOptionalTimestampOrDateString('deposit_paid_at') &&
+        isValidOptionalString('razorpay_payment_id', 0, 128) &&
+        isValidOptionalString('waba_message_id', 0, 200) &&
+        isValidOptionalBool('onboarding_completed') &&
+        isValidOptionalOnboardingData(data) &&
+        isValidOptionalString('call_slot_id', 0, 64) &&
+        isValidOptionalString('call_slot_label', 0, 120) &&
+        isValidOptionalTimestampOrDateString('call_slot_iso') &&
+        isValidOptionalTimestampOrDateString('call_slot_selected_at') &&
+        isValidOptionalTimestampOrDateString('call_requested_at') &&
+        isValidOptionalString('call_slot_source', 0, 40) &&
+        (!('call_slot_options' in data) || (data.call_slot_options is list && data.call_slot_options.size() <= 10));
+    }
+
+    function isValidFunnelEvent(data) {
+      let requiredFields = [
+        'event_type',
+        'timestamp'
+      ];
+      let allowedFields = [
+        'event_type',
+        'timestamp',
+        'lead_rank',
+        'lead_id',
+        'business_name',
+        'phone_whatsapp',
+        'status',
+        'wamid',
+        'razorpay_payment_id',
+        'actor',
+        'payload_summary',
+        'raw_payload'
+      ];
+
+      return hasRequiredFields(requiredFields) &&
+        hasOnlyAllowedFields(allowedFields) &&
+        validStringLength('event_type', 1, 100) &&
+        isValidOptionalTimestampOrDateString('timestamp') &&
+        isValidOptionalNumber('lead_rank', 0, 10000) &&
+        isValidOptionalString('lead_id', 0, 128) &&
+        isValidOptionalString('business_name', 0, 200) &&
+        isValidOptionalString('phone_whatsapp', 0, 30) &&
+        isValidOptionalString('status', 0, 100) &&
+        isValidOptionalString('wamid', 0, 200) &&
+        isValidOptionalString('razorpay_payment_id', 0, 128) &&
+        isValidOptionalString('actor', 0, 120) &&
+        isValidOptionalString('payload_summary', 0, 2000) &&
+        isValidOptionalRawPayload(data);
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
+    match /leads/{leadId} {
+      // Allow reading leads for CRM dashboard operators (works out-of-the-box before Auth provider is enabled)
+      allow read: if true;
+
+      // Validate full schema and ownership integrity on create
+      allow create: if uidUnchanged() &&
+        isValidLead(request.resource.data);
+
+      // Validate full schema, immutable fields, and UID integrity on update
+      allow update: if uidNotModified() &&
+        areImmutableFieldsUnchanged(['rank', 'created_at']) &&
+        isValidLead(request.resource.data);
+
+      // Only allow authenticated document owner to delete a lead
+      allow delete: if isAuthenticated() &&
+        (!('owner_uid' in resource.data) || resource.data.owner_uid == request.auth.uid);
+    }
+
+    match /funnel_events/{eventId} {
+      // Allow reading funnel diagnostic telemetry in the Admin & Funnel Diagnostics panel
+      allow read: if true;
+
+      // Allow creating validated, append-only audit log entries
+      allow create: if isValidFunnelEvent(request.resource.data);
+
+      // Deny updates and deletes to guarantee audit log immutability
+      allow update, delete: if false;
+    }
+
+    // ===============================================================
+    // Default Deny All Other Paths
+    // ===============================================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

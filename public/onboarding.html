@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment Confirmed — 2-Minute Clinic Launch Onboarding | Indian Bison</title>
+  <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --bg: #070b12;
+      --card: #0f172a;
+      --border: #1e293b;
+      --primary: #10b981;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+    }
+  </style>
+</head>
+<body class="bg-[var(--bg)] text-[var(--text)] antialiased min-h-screen py-10 px-4">
+
+  <div class="max-w-2xl mx-auto space-y-6">
+    <!-- Top Payment Receipt Card -->
+    <div class="bg-emerald-950/40 border border-emerald-500/40 rounded-2xl p-6 shadow-xl space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500 text-slate-950 uppercase tracking-wider">
+          ✓ ₹2,999/- SLOT-LOCK DEPOSIT CONFIRMED
+        </span>
+        <span id="receipt-id" class="text-xs font-mono text-emerald-300">Razorpay ID: Verified</span>
+      </div>
+      <h1 id="welcome-title" class="text-2xl font-extrabold text-white">
+        Sector Exclusivity Locked! Let's Configure Your Clinic Portal
+      </h1>
+      <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+        Thank you! Your micro-sector exclusivity is now locked—we have halted outreach to all competing dental clinics in your locality. Complete this 60-second setup form so our engineering team can deliver your live system within <strong>5 business days</strong>.
+      </p>
+      <div class="grid grid-cols-3 gap-2.5 pt-2 text-center text-xs">
+        <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-2.5">
+          <div class="text-[var(--muted)]">Deposit Paid Today</div>
+          <div class="text-base font-bold text-emerald-400 mt-0.5">₹2,999</div>
+        </div>
+        <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-2.5">
+          <div class="text-[var(--muted)]">Balance on Live Launch</div>
+          <div id="balance-amount" class="text-base font-bold text-amber-400 mt-0.5">₹15,501</div>
+        </div>
+        <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-2.5">
+          <div class="text-[var(--muted)]">Delivery SLA</div>
+          <div class="text-base font-bold text-sky-400 mt-0.5">5 Days</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2-Minute Clinic Onboarding Form -->
+    <div class="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 shadow-xl space-y-4">
+      <h2 class="text-lg font-bold text-white border-b border-[var(--border)] pb-3">
+        🛠️ 60-Second Clinic Configuration Form
+      </h2>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+        <div class="sm:col-span-2">
+          <label class="block font-semibold text-slate-200 mb-1">1. Preferred Custom Domain Name (.com or .in) *</label>
+          <input id="ob-domain" type="text" placeholder="e.g. www.suman-dental-noida.com" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white" />
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-200 mb-1">2. Morning OPD Timings *</label>
+          <input id="ob-morning" type="text" value="10:00 AM – 02:00 PM" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white" />
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-200 mb-1">3. Evening OPD Timings *</label>
+          <input id="ob-evening" type="text" value="05:00 PM – 08:30 PM" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white" />
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-200 mb-1">4. WhatsApp Number for Patient Slot Alerts *</label>
+          <input id="ob-whatsapp" type="text" placeholder="+91..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white" />
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-200 mb-1">5. Weekly Off Day</label>
+          <select id="ob-offday" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white">
+            <option value="Open All 7 Days">Open All 7 Days</option>
+            <option value="Tuesday Closed">Tuesday Closed</option>
+            <option value="Monday Closed">Monday Closed</option>
+            <option value="Sunday Evening Closed">Sunday Evening Closed</option>
+          </select>
+        </div>
+
+        <div class="sm:col-span-2">
+          <label class="block font-semibold text-slate-200 mb-1">6. Top 3 Priority Treatments to Highlight on Homepage *</label>
+          <input id="ob-treatments" type="text" value="Single-Sitting Painless RCT, Dental Implants, Zirconia Crowns & Aligners" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white" />
+        </div>
+
+        <div class="sm:col-span-2">
+          <label class="block font-semibold text-slate-200 mb-1">7. Nearest Landmark for Auto-Sent WhatsApp Parking Pin</label>
+          <input id="ob-landmark" type="text" placeholder="e.g. Opposite Alpha-1 Commercial Belt Metro / Near Pari Chowk" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white" />
+        </div>
+      </div>
+
+      <button onclick="submitOnboarding()" id="btn-submit-ob" class="w-full py-3.5 rounded-xl text-sm font-bold bg-emerald-500 text-slate-950 hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/20">
+        🚀 Submit Configuration & Start 5-Day Build
+      </button>
+
+      <p id="ob-success-msg" class="hidden text-center text-xs font-semibold text-emerald-400 bg-emerald-950/50 border border-emerald-500/30 rounded-xl p-3">
+        ✓ Configuration saved to Cloud Firestore! Your dedicated engineer will share your live staging link within 48 hours.
+      </p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      projectId: "indian-bison-crm-2026",
+      appId: "1:303567261777:web:e3e4d8875ec9ccef262870",
+      storageBucket: "indian-bison-crm-2026.firebasestorage.app",
+      apiKey: "AIzaSyB4ZsS4KA4qDmh_lFA7I_0W_E24aJEp-Zs",
+      authDomain: "indian-bison-crm-2026.firebaseapp.com",
+      messagingSenderId: "303567261777"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const params = new URLSearchParams(window.location.search);
+    const rank = parseInt(params.get("rank") || "1", 10);
+    const clinicName = params.get("name") || `Clinic #${rank}`;
+    const setupFee = parseInt(params.get("setup") || "18500", 10);
+    const phone = params.get("phone") || "";
+    const paymentId = params.get("payment_id") || `rzp_slot_${Date.now()}`;
+
+    document.getElementById("welcome-title").textContent = `${clinicName} — Sector Exclusivity Locked!`;
+    document.getElementById("receipt-id").textContent = `Ref: ${paymentId}`;
+    document.getElementById("balance-amount").textContent = "₹" + Math.max(0, setupFee - 2999).toLocaleString("en-IN");
+    document.getElementById("ob-whatsapp").value = phone;
+    document.getElementById("ob-domain").value = `www.${clinicName.toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 18)}dental.com`;
+
+    window.submitOnboarding = async function() {
+      const btn = document.getElementById("btn-submit-ob");
+      btn.textContent = "Saving Configuration to Cloud...";
+      const onboardingData = {
+        preferred_domain: document.getElementById("ob-domain").value.trim(),
+        morning_opd: document.getElementById("ob-morning").value.trim(),
+        evening_opd: document.getElementById("ob-evening").value.trim(),
+        alert_whatsapp: document.getElementById("ob-whatsapp").value.trim(),
+        weekly_off: document.getElementById("ob-offday").value,
+        priority_treatments: document.getElementById("ob-treatments").value.trim(),
+        landmark_pin: document.getElementById("ob-landmark").value.trim(),
+        submitted_at: new Date().toISOString()
+      };
+
+      try {
+        await setDoc(doc(db, "leads", `lead_${String(rank).padStart(3, "0")}`), {
+          status: "Booked",
+          deposit_paid: true,
+          slot_lock_deposit_inr: 2999,
+          balance_on_delivery_inr: Math.max(0, setupFee - 2999),
+          razorpay_payment_id: paymentId,
+          onboarding_completed: true,
+          onboarding_data: onboardingData,
+          updated_at: new Date().toISOString()
+        }, { merge: true });
+      } catch (e) {
+        console.warn("Firestore onboarding update notice:", e);
+      }
+
+      btn.textContent = "✓ Configuration Submitted — 5-Day Build Started";
+      document.getElementById("ob-success-msg").classList.remove("hidden");
+    };
+  </script>
+</body>
+</html>

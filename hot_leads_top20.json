@@ -1,0 +1,402 @@
+[
+  {
+    "rank": 1,
+    "urgency_tier": "CRITICAL (Tier 1)",
+    "urgency_score": 98,
+    "business_name": "3 C Dental Clinic (3C Dental Center)",
+    "category": "Dental Clinic",
+    "sub_category": "Oral Surgery, Pediatric & Cosmetic Dentistry",
+    "locality": "UGF-14, Eldeco Arcadia Shopping Complex, Sector Pi-1 / Phi-1, Greater Noida",
+    "rating": 3.7,
+    "total_reviews": 46,
+    "phone_whatsapp": "+918130472244",
+    "website_url": "MISSING_WEBSITE",
+    "operational_friction_1_2_star": true,
+    "friction_details": "1-star & 2-star reviews cite unconfirmed walk-in wait times, inconsistent visiting consultant schedules, and no online booking/hours verification.",
+    "filter_criteria_matched": [
+      "a) Missing website entirely (MISSING_WEBSITE)",
+      "b) Rating in 3.5–4.2 drop zone (3.7 stars) with operational/scheduling friction",
+      "c) Incomplete profile attributes (no direct booking link or digital service menu)"
+    ],
+    "recommended_pitch": "Automated WhatsApp appointment confirmation + GBP rating recovery workflow + high-converting 1-page clinic website."
+  },
+  {
+    "rank": 2,
+    "urgency_tier": "CRITICAL (Tier 1)",
+    "urgency_score": 94,
+    "business_name": "Dr. Suman Singh Dental Health Clinic",
+    "category": "Dentist",
+    "sub_category": "Endodontics (RCT) & General Dentistry",
+    "locality": "A-3, Near Gate No. 1, Edana Apartment, Sector Alpha-1, Greater Noida",
+    "rating": 4.1,
+    "total_reviews": 38,
+    "phone_whatsapp": "+919953044628",
+    "website_url": "http://sumandentalhealthclinic.com (BROKEN_OR_UNSECURE_HTTP)",
+    "operational_friction_1_2_star": true,
+    "friction_details": "Low-star feedback mentions difficulty confirming evening OPD hours and slow phone response during peak clinical procedures.",
+    "filter_criteria_matched": [
+      "a) Unsecure/legacy web link lacking SSL & mobile booking",
+      "b) Rating in 3.5–4.2 drop zone (4.1 stars) with response friction",
+      "c) Missing structured services/pricing menu on Google Business Profile"
+    ],
+    "recommended_pitch": "SSL website modernization + missed-call-to-WhatsApp auto-responder + automated post-visit review requests."
+  },
+  {
+    "rank": 3,
+    "urgency_tier": "HIGH (Tier 1)",
+    "urgency_score": 92,
+    "business_name": "Mouth Matters (The Dental Centre)",
+    "category": "Dental Clinic",
+    "sub_category": "Adult Orthodontics, Aligners & Restorative Dentistry",
+    "locality": "Shop No. 42, Kadamba Shopping Complex, Sector Gamma-1, Greater Noida",
+    "rating": 4.2,
+    "total_reviews": 64,
+    "phone_whatsapp": "+919889085093",
+    "website_url": "http://mouthmatters.yolasite.com (DEAD_OR_ABANDONED_FREE_SUBDOMAIN)",
+    "operational_friction_1_2_star": true,
+    "friction_details": "Patients report outdated free Yolasite subdomain link on profile, hard-to-find aligner pricing info, and manual phone-only scheduling.",
+    "filter_criteria_matched": [
+      "a) Abandoned free-tier subdomain (yolasite.com) acting as dead/unprofessional link",
+      "b) Rating at 4.2 stars threshold with online information friction",
+      "c) Missing updated service catalog and self-serve booking link"
+    ],
+    "recommended_pitch": "Replace legacy Yolasite subdomain with custom domain + interactive aligner/RCT booking funnel."
+  },
+  {
+    "rank": 4,
+    "urgency_tier": "HIGH (Tier 1)",
+    "urgency_score": 90,
+    "business_name": "Muskan Dental Clinic (Dr. Gautam Kumar)",
+    "category": "Dental Clinic",
+    "sub_category": "Conservative Dentistry, Crowns, Bridges & Implants",
+    "locality": "Shop No. 215, 2nd Floor, Om Tower, Alpha-1 Commercial Belt, Greater Noida",
+    "rating": 4.4,
+    "total_reviews": 520,
+    "phone_whatsapp": "+919873206739",
+    "website_url": "MISSING_WEBSITE",
+    "operational_friction_1_2_star": true,
+    "friction_details": "Despite 10+ years and 500+ directory ratings, 1-2 star reviews note long waiting room delays in Alpha-1 Commercial Belt and no online slot booking.",
+    "filter_criteria_matched": [
+      "a) Missing dedicated website entirely (relies on third-party aggregators)",
+      "c) Missing direct appointment link & digital treatment menu on GBP"
+    ],
+    "recommended_pitch": "High-volume established clinic losing search traffic to Clove Dental nearby; pitch dedicated brand website + WhatsApp queue/slot manager."
+  },
+  {
+    "rank": 5,
+    "urgency_tier": "HIGH (Tier 1)",
+    "urgency_score": 89,
+    "business_name": "The Dentist Multispeciality Dental Clinic (Dr. Nakul Motla)",
+    "category": "Dental Clinic",
+    "sub_category": "Multispeciality Dentistry, RCT & Dental Implants",
+    "locality": "Sector Beta-2, Greater Noida",
+    "rating": 4.9,
+    "total_reviews": 1020,
+    "phone_whatsapp": "+919289992022",
+    "website_url": "MISSING_WEBSITE",
+    "operational_friction_1_2_star": true,
+    "friction_details": "High patient volume (1,000+ reviews) causes front-desk phone bottlenecks; occasional 1-2 star reviews cite crowded waiting times despite prior calls.",
+    "filter_criteria_matched": [
+      "a) Missing owned website (uses aggregator profiles like SmartCare/Justdial)",
+      "c) Missing automated booking & treatment catalog link"
+    ],
+    "recommended_pitch": "Flagship digital clinic portal + automated WhatsApp slot scheduling to eliminate front-desk phone overload."
+  },
+  {
+    "rank": 6,
+    "urgency_tier": "HIGH (Tier 1)",
+    "urgency_score": 87,
+    "business_name": "Smile of India Dental Clinic and Implant Center",
+    "category": "Dental Clinic",
+    "sub_category": "Implantology & Family Dentistry",
+    "locality": "Greater Noida",
+    "rating": 4.2,
+    "total_reviews": 41,
+    "phone_whatsapp": "+919711157741",
+    "website_url": "https://smile-of-india.localo.site (FREE_GENERATED_PLACEHOLDER_SITE)",
+    "operational_friction_1_2_star": true,
+    "friction_details": "Uses a basic auto-generated Localo placeholder page; negative reviews mention lack of clear fee transparency and slow callback on inquiries.",
+    "filter_criteria_matched": [
+      "a) Placeholder single-card subdomain instead of a functional website",
+      "b) Rating at 4.2 stars with inquiry response friction",
+      "c) Incomplete service menu and missing booking integration"
+    ],
+    "recommended_pitch": "Upgrade from generic Localo placeholder to a custom SEO-optimized dental implant landing page + instant WhatsApp lead capture."
+  },
+  {
+    "rank": 7,
+    "urgency_tier": "HIGH (Tier 2)",
+    "urgency_score": 85,
+    "business_name": "Aggarwal Dentals Clinic",
+    "category": "Dental Clinic",
+    "sub_category": "General & Preventive Family Dentistry",
+    "locality": "Sector Beta-1, Greater Noida",
+    "rating": 4.9,
+    "total_reviews": 88,
+    "phone_whatsapp": "+919899937440",
+    "website_url": "MISSING_WEBSITE",
+    "operational_friction_1_2_star": false,
+    "friction_details": "Patients note reliance on phone calls for timing checks; no online presence outside directory listings.",
+    "filter_criteria_matched": [
+      "a) Missing website entirely (MISSING_WEBSITE)",
+      "c) Incomplete profile attributes (missing website/services link)"
+    ],
+    "recommended_pitch": "Local SEO website + WhatsApp click-to-book integration to capture Beta-1 family searches."
+  },
+  {
+    "rank": 8,
+    "urgency_tier": "HIGH (Tier 2)",
+    "urgency_score": 84,
+    "business_name": "32 Dentz Clinic",
+    "category": "Dental Clinic",
+    "sub_category": "Multispeciality Dental Care & Full-Mouth Rehabilitation",
+    "locality": "UGF 39, Omaxe Arcade, Ansal Golf Link-1, Near Pari Chowk, Omega-1, Greater Noida",
+    "rating": 4.8,
+    "total_reviews": 95,
+    "phone_whatsapp": "+918210561224",
+    "website_url": "MISSING_WEBSITE",
+    "operational_friction_1_2_star": true,
+    "friction_details": "Located in busy Omaxe Arcade near Pari Chowk; reviewers mention difficulty finding exact shop entrance/parking info and no website.",
+    "filter_criteria_matched": [
+      "a) Missing website entirely (MISSING_WEBSITE)",
+      "c) Missing digital directions/parking guide and online booking link"
+    ],
+    "recommended_pitch": "Custom clinic website with embedded Pari Chowk/Omaxe Arcade landmark guide + automated WhatsApp location pin sender on booking."
+  },
+  {
+    "rank": 9,
+    "urgency_tier": "HIGH (Tier 2)",
+    "urgency_score": 83,
+    "business_name": "Eugenics Dental Clinic",
+    "category": "Dental Clinic",
+    "sub_category": "Sterilization-Focused General & Cosmetic Dentistry",
+    "locality": "Opposite Rampur Market, Sector Beta-2, Greater Noida",
+    "rating": 4.6,
+    "total_reviews": 54,
+    "phone_whatsapp": "+918971372986",
+    "website_url": "MISSING_WEBSITE",
+    "operational_friction_1_2_star": true,
+    "friction_details": "1-2 star feedback mentions unannounced holiday/evening closures and inability to check live doctor availability online.",
+    "filter_criteria_matched": [
+      "a) Missing website entirely (MISSING_WEBSITE)",
+      "c) Incomplete profile attributes (missing live hours sync & services link)"
+    ],
+    "recommended_pitch": "GBP hours/attribute optimization + standalone clinic website with real-time WhatsApp appointment calendar."
+  },
+  {
+    "rank": 10,
+    "urgency_tier": "HIGH (Tier 2)",
+    "urgency_score": 82,
+    "business_name": "M.S Dental Clinic Implant & Braces Centre",
+    "category": "Dental Clinic",
+    "sub_category": "Dental Implants & Orthodontic Braces",
+    "locality": "108, 1st Floor, Mukhiya Jee Plaza (Above Om Health Care), Sector Pi-1, Accher, Greater Noida",
+    "rating": 4.9,
+    "total_reviews": 58,
+    "phone_whatsapp": "+919667737010",
+    "website_url": "MISSING_WEBSITE",
+    "operational_friction_1_2_star": false,
+    "friction_details": "No website or online portfolio for high-ticket implant and braces cases; relies purely on walk-ins and Magicpin/Justdial listings.",
+    "filter_criteria_matched": [
+      "a) Missing website entirely (MISSING_WEBSITE)",
+      "c) Missing before/after smile gallery and online consultation link"
+    ],
+    "recommended_pitch": "High-ticket Implant & Braces portfolio website + automated WhatsApp EMI/treatment brochure sender."
+  },
+  {
+    "rank": 11,
+    "urgency_tier": "HIGH (Tier 2)",
+    "urgency_score": 80,
+    "business_name": "Family Dental Clinic",
+    "category": "Dental Clinic",
+    "sub_category": "General & Pediatric Family Dentistry",
+    "locality": "Sector Alpha-2, Greater Noida",
+    "rating": 4.9,
+    "total_reviews": 134,
+    "phone_whatsapp": "+919311823735",
+    "website_url": "MISSING_WEBSITE",
+    "operational_friction_1_2_star": true,
+    "friction_details": "Uses third-party SmartCare aggregator link instead of an owned domain; occasional complaints about peak-hour waiting times.",
+    "filter_criteria_matched": [
+      "a) Missing independent website (MISSING_WEBSITE)",
+      "c) Missing direct service menu and self-scheduled appointment link"
+    ],
+    "recommended_pitch": "Independent clinic website to stop leaking leads to aggregator directories + automated WhatsApp reminder system."
+  },
+  {
+    "rank": 12,
+    "urgency_tier": "HIGH (Tier 2)",
+    "urgency_score": 79,
+    "business_name": "Krishna Dental Clinic & Implant Centre",
+    "category": "Dental Clinic",
+    "sub_category": "Implantology & Oral Healthcare",
+    "locality": "Alpha-1 / Aicher Market, Greater Noida",
+    "rating": 4.8,
+    "total_reviews": 215,
+    "phone_whatsapp": "+919354433497",
+    "website_url": "MISSING_WEBSITE",
+    "operational_friction_1_2_star": true,
+    "friction_details": "Uses only an Instagram page as web presence; multiple local branches (Aicher, Alpha-1, Tech Zone IV) cause patient confusion on doctor timings.",
+    "filter_criteria_matched": [
+      "a) Missing dedicated website (Instagram-only link)",
+      "c) Multi-branch hours/location confusion on Google listings"
+    ],
+    "recommended_pitch": "Multi-location clinic website with branch-specific doctor schedule selector + WhatsApp routing."
+  },
+  {
+    "rank": 13,
+    "urgency_tier": "HIGH (Tier 2)",
+    "urgency_score": 78,
+    "business_name": "Cosmozone Clinic (Dental & Aesthetics)",
+    "category": "Dental Clinic",
+    "sub_category": "Cosmetic Dentistry & Aesthetic Care",
+    "locality": "Omaxe Arcade, Near Pari Chowk, Sector Omega-1, Greater Noida",
+    "rating": 4.7,
+    "total_reviews": 49,
+    "phone_whatsapp": "+919891812068",
+    "website_url": "MISSING_WEBSITE",
+    "operational_friction_1_2_star": true,
+    "friction_details": "Practo virtual extension numbers frequently fail to connect; patients report difficulty booking direct cosmetic consultations.",
+    "filter_criteria_matched": [
+      "a) Missing website entirely (MISSING_WEBSITE)",
+      "c) Missing direct booking link (relies on third-party masked phone extensions)"
+    ],
+    "recommended_pitch": "Direct-to-clinic website + WhatsApp cosmetic consultation funnel (eliminating Practo commission/masked call drops)."
+  },
+  {
+    "rank": 14,
+    "urgency_tier": "HIGH (Tier 2)",
+    "urgency_score": 76,
+    "business_name": "Dental Paradise",
+    "category": "Dental Clinic",
+    "sub_category": "Pediatric & General Dentistry",
+    "locality": "Gaur City 2, Greater Noida West",
+    "rating": 4.8,
+    "total_reviews": 32,
+    "phone_whatsapp": "+919560604913",
+    "website_url": "MISSING_WEBSITE",
+    "operational_friction_1_2_star": false,
+    "friction_details": "High-density Gaur City 2 residential market, but clinic has zero standalone website and low review velocity compared to corporate competitors.",
+    "filter_criteria_matched": [
+      "a) Missing website entirely (MISSING_WEBSITE)",
+      "c) Incomplete GBP service attributes & missing booking portal"
+    ],
+    "recommended_pitch": "Gaur City 2 hyper-local SEO landing page + automated WhatsApp QR review booster in waiting room."
+  },
+  {
+    "rank": 15,
+    "urgency_tier": "MEDIUM-HIGH (Tier 3)",
+    "urgency_score": 74,
+    "business_name": "Tooth Angel Dental Clinic",
+    "category": "Dental Clinic",
+    "sub_category": "Family & Preventive Dentistry",
+    "locality": "Ace City, Sector 1, Greater Noida West",
+    "rating": 4.5,
+    "total_reviews": 44,
+    "phone_whatsapp": "+918048038812",
+    "website_url": "http://toothangeldental.com (MASKED_PB_NUMBER_AND_SLIM_PROFILE)",
+    "operational_friction_1_2_star": true,
+    "friction_details": "Uses a virtual PBX/IndiaMART-style 08048 number that patients cannot message on WhatsApp; 1-2 star reviews note call drop issues.",
+    "filter_criteria_matched": [
+      "b) Call-routing friction via virtual PBX number",
+      "c) Missing direct WhatsApp chat & transparent treatment menu on GBP"
+    ],
+    "recommended_pitch": "Replace virtual PBX drop-offs with direct WhatsApp Business API chatbot + local Ace City SEO optimization."
+  },
+  {
+    "rank": 16,
+    "urgency_tier": "MEDIUM-HIGH (Tier 3)",
+    "urgency_score": 72,
+    "business_name": "Pragya Dental Clinic (Dr. Pragya Singh)",
+    "category": "Dental Clinic",
+    "sub_category": "Root Canal Treatment (RCT) & Kids Dentistry",
+    "locality": "SF-166, Gaur City Center, Gaur Chowk, Greater Noida West",
+    "rating": 4.6,
+    "total_reviews": 138,
+    "phone_whatsapp": "+919810913226",
+    "website_url": "https://pragyadentalclinic.com",
+    "operational_friction_1_2_star": true,
+    "friction_details": "1-2 star reviews mention waiting delays at busy Gaur City Center mall complex and lack of real-time slot confirmation.",
+    "filter_criteria_matched": [
+      "b) Operational friction in 1-2 star reviews regarding appointment wait times",
+      "c) Missing automated online slot scheduler with live calendar sync"
+    ],
+    "recommended_pitch": "Automated WhatsApp slot booking & live queue updates for patients visiting Gaur City Center."
+  },
+  {
+    "rank": 17,
+    "urgency_tier": "MEDIUM-HIGH (Tier 3)",
+    "urgency_score": 70,
+    "business_name": "Clover Dental Solutions",
+    "category": "Dental Clinic",
+    "sub_category": "Restorative & Orthodontic Dentistry",
+    "locality": "Supertech Eco Village 2, Greater Noida West",
+    "rating": 4.6,
+    "total_reviews": 51,
+    "phone_whatsapp": "+919634552155",
+    "website_url": "https://cloverdentalsolutions.com",
+    "operational_friction_1_2_star": true,
+    "friction_details": "Name similarity to 'Clove Dental' causes brand confusion; reviewers mention difficulty finding exact market shop inside Eco Village 2.",
+    "filter_criteria_matched": [
+      "c) Incomplete GBP navigation attributes & missing automated WhatsApp booking/location flow"
+    ],
+    "recommended_pitch": "Brand differentiation SEO + automated WhatsApp directions/booking bot for Eco Village 2 residents."
+  },
+  {
+    "rank": 18,
+    "urgency_tier": "MEDIUM (Tier 3)",
+    "urgency_score": 68,
+    "business_name": "Dr. Sinha Dental Clinic",
+    "category": "Dental Clinic",
+    "sub_category": "Affordable Family Dental Care & Oral Hygiene",
+    "locality": "Greater Noida",
+    "rating": 4.7,
+    "total_reviews": 76,
+    "phone_whatsapp": "+918929668873",
+    "website_url": "https://drsinhadentalclinic.com",
+    "operational_friction_1_2_star": true,
+    "friction_details": "Static informational website without instant slot booking; occasional reviews mention phone busy signals during evening clinic hours.",
+    "filter_criteria_matched": [
+      "c) Missing interactive online appointment booking & structured service pricing menu"
+    ],
+    "recommended_pitch": "Add interactive 24/7 WhatsApp booking widget + automated patient recall reminders."
+  },
+  {
+    "rank": 19,
+    "urgency_tier": "MEDIUM (Tier 3)",
+    "urgency_score": 66,
+    "business_name": "Executive Implant Dental Clinic (Dr. K.D. Chaudhary)",
+    "category": "Dental Clinic",
+    "sub_category": "Prosthodontics, Zirconia Crowns & Implants",
+    "locality": "S-11, 1st Floor, Gamma Shopping Complex, Jagat Farm, Gamma-1, Greater Noida",
+    "rating": 4.9,
+    "total_reviews": 290,
+    "phone_whatsapp": "+919971963789",
+    "website_url": "https://executiveimplantdentalclinic.com",
+    "operational_friction_1_2_star": true,
+    "friction_details": "High demand in Jagat Farm leads to walk-in congestion; static website lacks live calendar booking or automated post-op follow-ups.",
+    "filter_criteria_matched": [
+      "c) Missing self-serve appointment scheduling link & automated WhatsApp triage"
+    ],
+    "recommended_pitch": "Automated WhatsApp implant consultation qualifier + live calendar booking integration."
+  },
+  {
+    "rank": 20,
+    "urgency_tier": "MEDIUM (Tier 3)",
+    "urgency_score": 65,
+    "business_name": "Peoples Dental Clinic (Dr. Ishan Singh)",
+    "category": "Dental Clinic",
+    "sub_category": "Painless RCT, Wisdom Tooth Extraction & Implants",
+    "locality": "Shop 5, Ground Floor, FS Plaza, Jagat Farm, Block E, Gamma-1, Greater Noida",
+    "rating": 4.9,
+    "total_reviews": 410,
+    "phone_whatsapp": "+918130624837",
+    "website_url": "https://peoplesdentalclinic.com",
+    "operational_friction_1_2_star": true,
+    "friction_details": "Multiple reviews explicitly advise 'must call ahead due to high patient volume and waiting time'; manual phone booking creates front-desk bottlenecks.",
+    "filter_criteria_matched": [
+      "c) High-volume scheduling friction requiring automated slot management"
+    ],
+    "recommended_pitch": "AI WhatsApp receptionist & automated slot management to cut front-desk phone calls by 70%."
+  }
+]
