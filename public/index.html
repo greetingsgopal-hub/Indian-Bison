@@ -156,34 +156,31 @@
         <span class="text-[11px] text-slate-400 font-medium hidden sm:inline">&lt;60w + STOP Trapdoor</span>
       </div>
 
-      <!-- 2. Auto-Scheduler Dynamic Ticker Card -->
-      <div id="schedule-ticker-card" class="bg-slate-900/95 border border-cyan-500/35 rounded-xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-2.5 text-xs shadow-sm">
+      <!-- 2. Manual Dispatch Console Bar -->
+      <div id="manual-dispatch-console" class="bg-slate-900/95 border border-cyan-500/35 rounded-xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs shadow-sm">
         <div class="flex flex-wrap items-center gap-2">
-          <span id="scheduler-badge" class="px-2 py-0.5 rounded-md font-extrabold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 uppercase tracking-wider flex items-center gap-1.5">
-            <span>🕒 Auto-Scheduler: ACTIVE</span>
-            <span id="scheduler-pulse" class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+          <span class="px-2 py-0.5 rounded-md font-extrabold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 uppercase tracking-wider flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+            <span>MANUAL DISPATCH MODE</span>
           </span>
-          <div class="flex items-center gap-1">
-            <span class="text-[var(--muted-foreground)]">Next OPD:</span>
-            <span id="scheduler-next-batch" class="font-mono font-bold text-cyan-300">11:30 AM (In 24m)</span>
+          <span class="text-slate-600 hidden sm:inline">|</span>
+          <div class="flex items-center gap-1 text-[var(--muted-foreground)]">
+            <span>Queued Leads:</span>
+            <span id="manual-queued-count" class="font-mono font-bold text-cyan-300">0</span>
           </div>
           <span class="text-slate-600 hidden sm:inline">|</span>
-          <div class="flex items-center gap-1">
-            <span class="text-[var(--muted-foreground)]">Target:</span>
-            <span id="scheduler-next-target" class="font-semibold text-white truncate max-w-[140px]">#2 Dr. Suman Singh</span>
-          </div>
-          <span class="text-slate-600 hidden sm:inline">|</span>
-          <div class="flex items-center gap-1">
-            <span class="text-[var(--muted-foreground)]">Jitter:</span>
-            <span id="scheduler-jitter" class="text-slate-300 font-mono">±6m</span>
+          <div class="flex items-center gap-1 text-[var(--muted-foreground)]">
+            <span>Selected:</span>
+            <span id="manual-selected-lead" class="font-semibold text-white truncate max-w-[170px]">#2 Dr. Suman Singh</span>
           </div>
         </div>
-        <div class="flex items-center gap-2 shrink-0">
-          <button id="btn-force-fire-queued" onclick="forceFireNextQueuedLead()" class="px-2.5 py-1 rounded-md text-xs font-bold border border-amber-500/50 bg-amber-500/20 text-amber-300 hover:bg-amber-500/35 transition flex items-center gap-1 shadow-sm" title="Dev Override: Instant trigger queued lead via Meta Cloud API">
-            <span>⚡ Force Fire Next Queued Lead Now (<span id="force-target-label">#2 Dr. Suman</span>)</span>
-          </button>
-          <button id="btn-toggle-scheduler" onclick="toggleAutoScheduler()" class="px-2.5 py-1 rounded-md text-xs font-bold border border-cyan-500/40 bg-cyan-500/15 text-cyan-300 hover:bg-cyan-500/25 transition flex items-center gap-1 shrink-0">
-            <span>⏸ Pause</span>
+        <div class="flex items-center gap-3 shrink-0">
+          <label class="flex items-center gap-1.5 text-xs text-slate-300 cursor-pointer select-none">
+            <input type="checkbox" id="chk-require-confirmation" checked class="rounded border-slate-600 text-cyan-500 focus:ring-cyan-400 focus:ring-offset-slate-900 w-3.5 h-3.5 bg-slate-800" />
+            <span class="text-[11px] text-slate-300">Require 1-Click Confirmation</span>
+          </label>
+          <button id="btn-manual-dispatch-now" onclick="triggerManualDispatchNow()" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-cyan-500 hover:bg-cyan-400 text-slate-950 transition flex items-center gap-1.5 shadow-md shadow-cyan-500/20 cursor-pointer">
+            <span>🚀 Send WhatsApp Outreach Now</span>
           </button>
         </div>
       </div>
@@ -1943,6 +1940,9 @@
       if (typeof updateDoctorEmulatorContent === "function") {
         updateDoctorEmulatorContent();
       }
+      if (typeof updateManualConsoleUI === "function") {
+        updateManualConsoleUI();
+      }
     }
 
     function selectHookVariant(mode) {
@@ -2644,38 +2644,12 @@ Once submitted, your sector is locked exclusively.`;
     }
 
     // =========================================================================
-    // 1. UNIFIED HYBRID DISPATCHER & REAL-TIME OPD AUTO-SCHEDULER ENGINE
+    // 1. STRICT 100% MANUAL DISPATCH CONSOLE ENGINE (ZERO AUTO-TIMERS / CRONS)
     // =========================================================================
-    let schedulerActive = true;
-    let schedulerNextTargetIndex = 2; // Dr. Suman Singh
-    let schedulerTargetTimestamp = null; // Exact epoch ms of next batch
-    let schedulerCurrentJitter = 6; // Jitter in minutes (±6m)
 
     function getISTDate(date = new Date()) {
       const utcMs = date.getTime() + date.getTimezoneOffset() * 60000;
       return new Date(utcMs + 5.5 * 3600000);
-    }
-
-    function formatTime12hIST(date) {
-      const ist = getISTDate(date);
-      let h = ist.getHours();
-      const m = ist.getMinutes();
-      const ampm = h >= 12 ? "PM" : "AM";
-      h = h % 12 || 12;
-      const mStr = m < 10 ? "0" + m : m;
-      return `${h}:${mStr} ${ampm}`;
-    }
-
-    function formatCountdown(ms) {
-      if (ms <= 0) return "0s";
-      const totalSecs = Math.floor(ms / 1000);
-      const hours = Math.floor(totalSecs / 3600);
-      const mins = Math.floor((totalSecs % 3600) / 60);
-      const secs = totalSecs % 60;
-      if (hours > 0) {
-        return `${hours}h ${mins}m`;
-      }
-      return `${mins}m ${secs < 10 ? "0" : ""}${secs}s`;
     }
 
     function sanitizeClinicName(name) {
@@ -2704,281 +2678,61 @@ Once submitted, your sector is locked exclusively.`;
       return `Hey ${docName}, noticed patients searching ${clinicName} in ${sector} find unconfirmed evening OPD timings and no direct booking link on your Google profile.\n\nBuilt a 30-second interactive prototype showing how a 24/7 WhatsApp booking slot & 5★ review shield fixes this.\n\nWant me to drop the preview link here?\n(Reply STOP to opt out)`;
     }
 
-    function getNextUncontactedLeadRank() {
-      const uncontacted = leads.find(l => !l.status || l.status === "Not Contacted");
-      if (uncontacted) return uncontacted.rank;
-      return (schedulerNextTargetIndex % 20) + 1;
+    function updateManualConsoleUI() {
+      const queuedCountEl = document.getElementById("manual-queued-count");
+      const selectedLeadEl = document.getElementById("manual-selected-lead");
+      
+      if (queuedCountEl) {
+        const queuedCount = leads.filter(l => !l.status || l.status === "Not Contacted").length;
+        queuedCountEl.textContent = queuedCount;
+      }
+      
+      if (selectedLeadEl) {
+        const activeLead = leads.find(l => l.rank === activeRank) || leads[0];
+        if (activeLead) {
+          selectedLeadEl.textContent = `#${activeLead.rank} ${sanitizeDoctorName(activeLead.recipient)}`;
+        }
+      }
     }
 
-    async function executeAutoSchedulerDispatch(isForce = false) {
-      const targetLead = leads.find(l => l.rank === schedulerNextTargetIndex) || leads.find(l => !l.status || l.status === "Not Contacted") || leads[0];
-      if (!targetLead) return;
-
-      const todayCount = getTodayApproachedCount();
-      if (!isForce && todayCount >= DAILY_APPROACH_LIMIT) {
-        logDashboardActivity(
-          "ANTI_BAN_GUARD",
-          `🛡️ Anti-Ban Quota Shield: 20/20 limit reached for today. Auto-scheduler held until next morning 10:30 AM.`
-        );
+    async function triggerManualDispatchNow() {
+      const lead = leads.find(l => l.rank === activeRank) || leads[0];
+      if (!lead) {
+        alert("No lead selected for manual dispatch.");
         return;
       }
 
-      // Generate sanitized high-context <60-word hook message
-      const cleanDoc = sanitizeDoctorName(targetLead.recipient);
-      const cleanClinic = sanitizeClinicName(targetLead.business_name);
-      const hookMsg = buildHighContextColdMessage(targetLead);
-
-      let cleanPhone = (targetLead.phone_whatsapp || "").replace(/[^0-9]/g, "");
-      if (cleanPhone.length === 10) cleanPhone = "91" + cleanPhone;
-
-      let dispatchedWamid = `wamid.HBgM${Date.now()}`;
-
-      // 1. Active Outbound Meta Cloud API Dispatch via Cloudflare Worker Bridge
-      try {
-        const res = await fetch("https://indian-bison-webhook.greetings-gopal.workers.dev/api/dispatch", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            leadRank: targetLead.rank,
-            phone: cleanPhone,
-            recipient: cleanDoc,
-            businessName: cleanClinic,
-            messageText: hookMsg,
-            sendInteractive: true
-          })
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.wamid) dispatchedWamid = data.wamid;
-        }
-      } catch (err) {
-        console.warn("[Cloudflare Dispatch API Fallback]", err);
-      }
-
-      // 2. State & Badge Mutation
-      targetLead.status = "WhatsApp Sent";
-      targetLead.last_contacted_at = new Date().toISOString();
-      targetLead.waba_message_id = dispatchedWamid;
-      saveState(targetLead);
-
-      // 3. Increment counters & re-render
-      incrementTodayApproachedCount();
-      renderLeads();
-      updateKPIs();
-
-      if (typeof playFunnelAudioAlert === "function") {
-        playFunnelAudioAlert("DISPATCH");
-      }
-
-      // 4. Log dispatched message ID directly into the Audit Log
-      logDashboardActivity(
-        "AUTO_DISPATCH",
-        `⚡ Dispatched Touch #1 outreach to #${targetLead.rank} ${targetLead.recipient} (${targetLead.business_name}) | Message ID: ${dispatchedWamid}`,
-        targetLead.rank
-      );
-
-      // 5. Advance to next queued lead & update force button
-      schedulerNextTargetIndex = getNextUncontactedLeadRank();
-      updateForceTargetLabel();
-    }
-
-    async function forceFireNextQueuedLead() {
-      const btn = document.getElementById("btn-force-fire-queued");
-      if (btn) {
-        btn.disabled = true;
-        btn.classList.add("opacity-50");
-      }
-
-      await executeAutoSchedulerDispatch(true);
-
-      // Reset target countdown to next interval
-      schedulerCurrentJitter = 4 + Math.floor(Math.random() * 6);
-      schedulerTargetTimestamp = Date.now() + (15 + schedulerCurrentJitter) * 60 * 1000;
-      updateSchedulerTicker();
-
-      if (btn) {
-        btn.disabled = false;
-        btn.classList.remove("opacity-50");
-      }
-    }
-
-    function updateForceTargetLabel() {
-      const label = document.getElementById("force-target-label");
-      const targetLead = leads.find(l => l.rank === schedulerNextTargetIndex) || leads[1] || leads[0];
-      if (label && targetLead) {
-        const shortName = (targetLead.recipient || "Doctor").split(" ").slice(0, 2).join(" ");
-        label.textContent = `#${targetLead.rank} ${shortName}`;
-      }
-    }
-
-    function updateSchedulerTicker() {
-      const badge = document.getElementById("scheduler-badge");
-      const pulse = document.getElementById("scheduler-pulse");
-      const nextBatch = document.getElementById("scheduler-next-batch");
-      const nextTarget = document.getElementById("scheduler-next-target");
-      const jitter = document.getElementById("scheduler-jitter");
-      const toggleBtn = document.getElementById("btn-toggle-scheduler");
-
-      if (!badge || !nextBatch) return;
-
-      if (!schedulerActive) {
-        badge.className = "px-2 py-0.5 rounded-md font-extrabold bg-slate-800 text-slate-400 border border-slate-700 uppercase tracking-wider flex items-center gap-1.5";
-        badge.innerHTML = `<span>🕒 Auto-Scheduler: PAUSED</span>`;
-        if (pulse) pulse.classList.add("hidden");
-        nextBatch.textContent = "PAUSED (Manual Mode)";
-        nextBatch.className = "font-mono font-bold text-slate-400";
-        if (toggleBtn) {
-          toggleBtn.innerHTML = `<span>▶ Resume</span>`;
-          toggleBtn.className = "px-2.5 py-1 rounded-md text-xs font-bold border border-emerald-500/40 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25 transition flex items-center gap-1 shrink-0";
-        }
-        return;
-      }
-
-      // 1. Compute true wall-clock time in IST
-      const nowMs = Date.now();
-      const istNow = getISTDate(new Date(nowMs));
-      const day = istNow.getDay(); // 0 = Sun, 1..6 = Mon..Sat
-      const hourDecimal = istNow.getHours() + istNow.getMinutes() / 60 + istNow.getSeconds() / 3600;
-
-      const isMonToSat = day >= 1 && day <= 6;
-      const MORNING_START = 10.5; // 10:30 AM
-      const MORNING_END = 13.5;   // 01:30 PM
-      const EVENING_START = 17.0; // 05:00 PM
-      const EVENING_END = 20.5;   // 08:30 PM
-
-      let isInsideWindow = false;
-      let windowEndDecimal = 0;
-
-      if (isMonToSat) {
-        if (hourDecimal >= MORNING_START && hourDecimal < MORNING_END) {
-          isInsideWindow = true;
-          windowEndDecimal = MORNING_END;
-        } else if (hourDecimal >= EVENING_START && hourDecimal < EVENING_END) {
-          isInsideWindow = true;
-          windowEndDecimal = EVENING_END;
-        }
-      }
-
-      // 2. Handle Inside Window
-      if (isInsideWindow) {
-        badge.className = "px-2 py-0.5 rounded-md font-extrabold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 uppercase tracking-wider flex items-center gap-1.5";
-        badge.innerHTML = `<span>🕒 Auto-Scheduler: ACTIVE</span><span id="scheduler-pulse" class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>`;
-        if (toggleBtn) {
-          toggleBtn.innerHTML = `<span>⏸ Pause</span>`;
-          toggleBtn.className = "px-2.5 py-1 rounded-md text-xs font-bold border border-cyan-500/40 bg-cyan-500/15 text-cyan-300 hover:bg-cyan-500/25 transition flex items-center gap-1 shrink-0";
-        }
-
-        // Check if countdown reached 0 or target timestamp is in the past
-        if (!schedulerTargetTimestamp || nowMs >= schedulerTargetTimestamp) {
-          if (schedulerTargetTimestamp) {
-            // Countdown hit 0: fire dispatch
-            executeAutoSchedulerDispatch();
-          }
-          // Calculate next randomized jitter interval (15 to 25 minutes, ±6m)
-          schedulerCurrentJitter = 4 + Math.floor(Math.random() * 6); // 4m - 9m
-          const intervalMs = (15 + schedulerCurrentJitter) * 60 * 1000;
-          schedulerTargetTimestamp = nowMs + intervalMs;
-        }
-
-        // Check if target pushes beyond current active window
-        const targetIST = getISTDate(new Date(schedulerTargetTimestamp));
-        const targetHourDecimal = targetIST.getHours() + targetIST.getMinutes() / 60 + targetIST.getSeconds() / 3600;
-
-        if (targetHourDecimal >= windowEndDecimal || targetIST.getDate() !== istNow.getDate()) {
-          if (windowEndDecimal === MORNING_END) {
-            const nextW = new Date(nowMs);
-            nextW.setHours(17, 0, 0, 0);
-            schedulerTargetTimestamp = nextW.getTime();
-          } else {
-            const daysToAdd = day === 6 ? 2 : 1;
-            const nextW = new Date(nowMs);
-            nextW.setDate(nextW.getDate() + daysToAdd);
-            nextW.setHours(10, 30, 0, 0);
-            schedulerTargetTimestamp = nextW.getTime();
-          }
-        }
-
-        const remainingMs = Math.max(0, schedulerTargetTimestamp - nowMs);
-        const targetDate = new Date(schedulerTargetTimestamp);
-        const formattedTargetTime = formatTime12hIST(targetDate);
-        const countdownStr = formatCountdown(remainingMs);
-
-        nextBatch.textContent = `${formattedTargetTime} (In ${countdownStr})`;
-        nextBatch.className = "font-mono font-bold text-cyan-300";
-
-        const targetLead = leads.find(l => l.rank === schedulerNextTargetIndex) || leads[1] || leads[0];
-        if (nextTarget && targetLead) {
-          nextTarget.textContent = `#${targetLead.rank} ${targetLead.recipient}`;
-        }
-        if (jitter) jitter.textContent = `±${schedulerCurrentJitter}m`;
-        return;
-      }
-
-      // 3. Handle Outside Window
-      badge.className = "px-2 py-0.5 rounded-md font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/40 uppercase tracking-wider flex items-center gap-1.5";
-      badge.innerHTML = `<span>🌙 Auto-Scheduler: STANDBY</span>`;
-      if (toggleBtn) {
-        toggleBtn.innerHTML = `<span>⏸ Pause</span>`;
-        toggleBtn.className = "px-2.5 py-1 rounded-md text-xs font-bold border border-cyan-500/40 bg-cyan-500/15 text-cyan-300 hover:bg-cyan-500/25 transition flex items-center gap-1 shrink-0";
-      }
-
-      let nextWindowDate = new Date(nowMs);
-      let nextWindowTimeLabel = "";
-
-      if (isMonToSat && hourDecimal < MORNING_START) {
-        nextWindowDate.setHours(10, 30, 0, 0);
-        nextWindowTimeLabel = "10:30 AM";
-      } else if (isMonToSat && hourDecimal >= MORNING_END && hourDecimal < EVENING_START) {
-        nextWindowDate.setHours(17, 0, 0, 0);
-        nextWindowTimeLabel = "5:00 PM";
-      } else {
-        const daysToAdd = day === 6 ? 2 : 1;
-        nextWindowDate.setDate(nextWindowDate.getDate() + daysToAdd);
-        nextWindowDate.setHours(10, 30, 0, 0);
-        nextWindowTimeLabel = daysToAdd === 2 ? "Mon 10:30 AM" : "Tomorrow 10:30 AM";
-      }
-
-      schedulerTargetTimestamp = nextWindowDate.getTime();
-      const remainingMs = Math.max(0, schedulerTargetTimestamp - nowMs);
-      const countdownStr = formatCountdown(remainingMs);
-
-      nextBatch.textContent = `Outside OPD Window | Next Window: ${nextWindowTimeLabel} (In ${countdownStr})`;
-      nextBatch.className = "font-mono font-bold text-amber-300";
-
-      const targetLead = leads.find(l => l.rank === schedulerNextTargetIndex) || leads[1] || leads[0];
-      if (nextTarget && targetLead) {
-        nextTarget.textContent = `#${targetLead.rank} ${targetLead.recipient} (Queued)`;
-      }
-      if (jitter) jitter.textContent = `±${schedulerCurrentJitter}m`;
-    }
-
-    function toggleAutoScheduler() {
-      schedulerActive = !schedulerActive;
-      logDashboardActivity(
-        "SCHEDULER_TOGGLED",
-        `Auto-Scheduler state toggled to: ${schedulerActive ? "ACTIVE (Mon–Sat 10:30–13:30 & 17:00–20:30 IST)" : "PAUSED (Manual Mode)"}`
-      );
-      updateSchedulerTicker();
-    }
-
-    async function dispatchSingleLeadManual(rank) {
-      const lead = leads.find(l => l.rank === rank);
-      if (!lead) return;
-
+      // 1. 20 Leads/Day Anti-Ban Quota Shield Check
       const todayCount = getTodayApproachedCount();
       if (todayCount >= DAILY_APPROACH_LIMIT) {
         const proceed = confirm(
           `🛡️ Anti-Ban Quota Shield Warning!\n\n` +
-          `You have already reached ${todayCount} / ${DAILY_APPROACH_LIMIT} leads approached today.\n\n` +
+          `You have reached ${todayCount} / ${DAILY_APPROACH_LIMIT} leads approached today.\n\n` +
           `Approaching >20 cold prospects per day triggers Meta spam detection filters.\n\n` +
           `Do you want to override and proceed at your own risk?`
         );
         if (!proceed) return;
       }
 
-      selectLead(rank);
       const cleanDoc = sanitizeDoctorName(lead.recipient);
       const cleanClinic = sanitizeClinicName(lead.business_name);
+
+      // 2. Safeguard Confirmation Toggle
+      const chkConfirm = document.getElementById("chk-require-confirmation");
+      if (chkConfirm && chkConfirm.checked) {
+        const confirmed = confirm(
+          `Confirm WhatsApp outreach to #${lead.rank} ${cleanDoc} (${cleanClinic})?\n\nTarget Phone: ${lead.phone_whatsapp}`
+        );
+        if (!confirmed) return;
+      }
+
+      const btn = document.getElementById("btn-manual-dispatch-now");
+      if (btn) {
+        btn.disabled = true;
+        btn.classList.add("opacity-50", "cursor-not-allowed");
+        btn.innerHTML = `<span>⏳ Sending Meta Outreach...</span>`;
+      }
+
       const composerVal = document.getElementById("inspector-message")?.value || "";
       const hookMsg = (!composerVal || composerVal.includes("Live Trial") || composerVal.includes("1-minute breakdown") || composerVal.includes("Open to a quick"))
         ? buildHighContextColdMessage(lead)
@@ -2987,16 +2741,11 @@ Once submitted, your sector is locked exclusively.`;
       let cleanPhone = (lead.phone_whatsapp || "").replace(/[^0-9]/g, "");
       if (cleanPhone.length === 10) cleanPhone = "91" + cleanPhone;
 
-      lead.status = "WhatsApp Sent";
-      lead.last_contacted_at = new Date().toISOString();
-      document.getElementById("inspector-status").value = "WhatsApp Sent";
-      saveState(lead);
-      incrementTodayApproachedCount();
-      renderLeads();
+      let dispatchedWamid = null;
+      let dispatchError = null;
 
-      // ⚡ Direct Cloudflare Worker Dispatch (Meta Interactive Button Template)
       try {
-        fetch("https://indian-bison-webhook.greetings-gopal.workers.dev/api/dispatch", {
+        const res = await fetch("https://indian-bison-webhook.greetings-gopal.workers.dev/api/dispatch", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -3007,33 +2756,65 @@ Once submitted, your sector is locked exclusively.`;
             messageText: hookMsg,
             sendInteractive: true
           })
-        }).then(res => res.json()).then(data => {
-          if (data && data.wamid) {
-            lead.waba_message_id = data.wamid;
-            saveState(lead);
-          }
-        }).catch(() => {});
-      } catch (e) {}
+        });
 
-      try {
-        fetch("http://localhost:3000/api/dispatch-manual", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ leadId: lead.rank, lead, customHookText: hookMsg })
-        }).catch(() => {});
-      } catch (e) {}
+        const data = await res.json().catch(() => ({}));
 
+        if (res.ok && data && (data.success || data.wamid)) {
+          dispatchedWamid = data.wamid || `wamid.HBgM${Date.now()}`;
+        } else {
+          const errMsg = (data && (data.error || data.message)) || `HTTP ${res.status} ${res.statusText}`;
+          const errCode = (data && data.code) || res.status;
+          dispatchError = `[Meta Error ${errCode}] ${errMsg}`;
+        }
+      } catch (err) {
+        dispatchError = `Network / Dispatch Failed: ${err.message || err}`;
+      }
+
+      if (dispatchError) {
+        alert(`⚠️ WhatsApp Manual Dispatch Failed!\n\n${dispatchError}\n\nLead status not modified.`);
+        if (btn) {
+          btn.disabled = false;
+          btn.classList.remove("opacity-50", "cursor-not-allowed");
+          btn.innerHTML = `<span>🚀 Send WhatsApp Outreach Now</span>`;
+        }
+        return;
+      }
+
+      // Synchronous State Mutation on Success:
+      lead.status = "WhatsApp Sent";
+      lead.last_contacted_at = new Date().toISOString();
+      lead.waba_message_id = dispatchedWamid;
+      const statusSelect = document.getElementById("inspector-status");
+      if (statusSelect) statusSelect.value = "WhatsApp Sent";
+      saveState(lead);
+
+      incrementTodayApproachedCount();
+      renderLeads();
+      updateKPIs();
+      updateManualConsoleUI();
+
+      if (typeof playFunnelAudioAlert === "function") {
+        playFunnelAudioAlert("DISPATCH");
+      }
+
+      const nowTimeStr = new Date().toLocaleTimeString('en-US', { hour12: false });
       logDashboardActivity(
         "MANUAL_DISPATCH",
-        `⚡ Instant Dispatch executed for #${lead.rank} ${cleanClinic} (${cleanPhone}) • Status -> WhatsApp Sent`,
+        `[${nowTimeStr}] Dispatched interactive template to ${cleanDoc} (${cleanPhone}) - WAMID: ${dispatchedWamid}`,
         lead.rank
       );
 
-      const waUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(hookMsg)}`;
-      const win = window.open(waUrl, "_blank");
-      if (!win || win.closed || typeof win.closed === "undefined") {
-        updateWhatsAppButtonUrl();
+      if (btn) {
+        btn.disabled = false;
+        btn.classList.remove("opacity-50", "cursor-not-allowed");
+        btn.innerHTML = `<span>🚀 Send WhatsApp Outreach Now</span>`;
       }
+    }
+
+    async function dispatchSingleLeadManual(rank) {
+      selectLead(rank);
+      await triggerManualDispatchNow();
     }
 
     // =========================================================================
@@ -3535,9 +3316,8 @@ Once submitted, your sector is locked exclusively.`;
 
     // Expose handlers globally
     window.dispatchSingleLeadManual = dispatchSingleLeadManual;
-    window.toggleAutoScheduler = toggleAutoScheduler;
-    window.forceFireNextQueuedLead = forceFireNextQueuedLead;
-    window.executeAutoSchedulerDispatch = executeAutoSchedulerDispatch;
+    window.triggerManualDispatchNow = triggerManualDispatchNow;
+    window.updateManualConsoleUI = updateManualConsoleUI;
     window.switchRightPanelTab = switchRightPanelTab;
     window.updateDoctorEmulatorContent = updateDoctorEmulatorContent;
     window.simulateDoctorReply = simulateDoctorReply;
@@ -3574,8 +3354,7 @@ Once submitted, your sector is locked exclusively.`;
     updateKPIs();
     renderLeads();
     selectLead(21);
-    setInterval(updateSchedulerTicker, 1000);
-    updateSchedulerTicker();
+    updateManualConsoleUI();
     updateDoctorEmulatorContent();
     initFunnelEventStream();
     window.playFunnelAudioAlert = playFunnelAudioAlert;

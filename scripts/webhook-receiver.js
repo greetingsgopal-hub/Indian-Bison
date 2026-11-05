@@ -22,7 +22,6 @@ const {
   CONFIG,
   dispatchSingleLeadManual,
   sendMetaCloudWhatsApp,
-  getScheduleStatus,
   buildStep2DemoMenuPayload
 } = require("../automation/autonomous-funnel-engine");
 
@@ -468,7 +467,7 @@ app.get("/api/health", (req, res) => {
       region: "asia-south2"
     },
     sse_clients_connected: sseClients.size,
-    schedule: getScheduleStatus()
+    dispatch_mode: "STRICT_MANUAL_DISPATCH"
   });
 });
 

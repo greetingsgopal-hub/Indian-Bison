@@ -13,15 +13,15 @@ const funnelEventBus = new EventEmitter();
 const recentFunnelEvents = [
   {
     id: "evt_boot_01",
-    event_type: "SYSTEM_SCHEDULER_ARMED",
-    timestamp: new Date(Date.now() - 360000).toISOString(),
+    event_type: "MANUAL_DISPATCH_ARMED",
+    timestamp: new Date().toISOString(),
     lead_rank: 21,
     lead_id: "lead_21",
     business_name: "Apex Dental & Implant Studio",
     phone_whatsapp: "+916209228845",
-    status: "SCHEDULED",
-    actor: "AutoScheduler",
-    payload_summary: "Hybrid Dispatcher armed: Mon–Sat 10:30–13:30 & 17:00–20:30 IST (Jitter: 4m–9m)."
+    status: "READY",
+    actor: "ManualConsole",
+    payload_summary: "Manual Dispatch Console active: 100% human-verified 1-click dispatch."
   }
 ];
 

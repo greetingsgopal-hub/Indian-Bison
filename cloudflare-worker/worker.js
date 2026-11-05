@@ -25,18 +25,10 @@ export default {
         service: "Indian Bison WhatsApp Cloudflare Worker",
         account_id: "04b586d238bb60304c8fc2501beaecf3",
         meta_app_id: env.META_APP_ID || "1132938199519864",
-        cron_active: true,
+        dispatch_mode: "STRICT_MANUAL_DISPATCH",
         interactive_templates_supported: true,
         uptime: "24/7/365 Serverless Cloud"
       }), {
-        headers: { "Content-Type": "application/json", ...CORS_HEADERS }
-      });
-    }
-
-    // 1.1 OPD Schedule Status Endpoint
-    if (url.pathname === "/api/schedule-status") {
-      const schedule = getOPDScheduleStatusWorker();
-      return new Response(JSON.stringify(schedule), {
         headers: { "Content-Type": "application/json", ...CORS_HEADERS }
       });
     }
@@ -165,19 +157,6 @@ export default {
     }
 
     return new Response("Not Found", { status: 404, headers: CORS_HEADERS });
-  },
-
-  // 4. Persistent Edge Cron Trigger (Serverless Cron on Cloudflare)
-  async scheduled(event, env, ctx) {
-    console.log(`[Cloudflare Edge Cron] Triggered by cron pattern: ${event.cron} at ${new Date().toISOString()}`);
-    const schedule = getOPDScheduleStatusWorker();
-    
-    if (!schedule.windowOpen) {
-      console.log(`[Cloudflare Edge Cron] Outside OPD window (${schedule.windowLabel}). Holding queue.`);
-      return;
-    }
-
-    console.log(`[Cloudflare Edge Cron] Active OPD window confirmed (${schedule.windowLabel}). Processing next queued lead.`);
   }
 };
 
@@ -414,49 +393,4 @@ async function sendWhatsAppMessage(recipientPhone, messageOrPayload, env) {
     console.error("[WhatsApp Send Error]", e.message);
     return { error: e.message, wamid: `wamid.fallback_${Date.now()}` };
   }
-}
-
-function getOPDScheduleStatusWorker(now = new Date()) {
-  const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
-  const istNow = new Date(utcMs + 5.5 * 3600000);
-  const day = istNow.getDay();
-  const hourDecimal = istNow.getHours() + istNow.getMinutes() / 60 + istNow.getSeconds() / 3600;
-
-  const isMonToSat = day >= 1 && day <= 6;
-  let activeWindow = null;
-  if (isMonToSat) {
-    if (hourDecimal >= 10.5 && hourDecimal < 13.5) activeWindow = { label: "Morning OPD Window", end: 13.5 };
-    else if (hourDecimal >= 17.0 && hourDecimal < 20.5) activeWindow = { label: "Evening OPD Window", end: 20.5 };
-  }
-
-  const formatCountdown = (ms) => {
-    const s = Math.floor(ms / 1000);
-    const h = Math.floor(s / 3600);
-    const m = Math.floor((s % 3600) / 60);
-    if (h > 0) return `${h}h ${m}m`;
-    return `${m}m ${s % 60}s`;
-  };
-
-  if (activeWindow) {
-    const intervalMs = 15 * 60 * 1000;
-    const nextTargetMs = Date.now() + intervalMs;
-    const targetIST = new Date(nextTargetMs + 5.5 * 3600000);
-    let h = targetIST.getHours() % 12 || 12;
-    const ampm = targetIST.getHours() >= 12 ? "PM" : "AM";
-    const mStr = targetIST.getMinutes() < 10 ? "0" + targetIST.getMinutes() : targetIST.getMinutes();
-    return {
-      windowOpen: true,
-      windowLabel: activeWindow.label,
-      displayText: `Next OPD: ${h}:${mStr} ${ampm} (In ${formatCountdown(intervalMs)})`,
-      secondsUntilNext: Math.round(intervalMs / 1000)
-    };
-  }
-
-  let nextLabel = hourDecimal < 10.5 ? "10:30 AM" : (hourDecimal < 17.0 ? "5:00 PM" : (day === 6 ? "Mon 10:30 AM" : "Tomorrow 10:30 AM"));
-  return {
-    windowOpen: false,
-    windowLabel: "Outside OPD Window",
-    displayText: `Outside OPD Window | Next Window: ${nextLabel}`,
-    secondsUntilNext: 0
-  };
 }
