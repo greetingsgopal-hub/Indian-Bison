@@ -26,6 +26,7 @@ export default {
         account_id: "04b586d238bb60304c8fc2501beaecf3",
         meta_app_id: env.META_APP_ID || "1132938199519864",
         cron_active: true,
+        interactive_templates_supported: true,
         uptime: "24/7/365 Serverless Cloud"
       }), {
         headers: { "Content-Type": "application/json", ...CORS_HEADERS }
@@ -41,17 +42,60 @@ export default {
     }
 
     // 1.2 Direct Outbound Dispatch Bridge (POST /api/dispatch)
+    // Supports both interactive button templates & text fallback
     if (request.method === "POST" && url.pathname === "/api/dispatch") {
       try {
         const body = await request.json();
-        const { leadRank, phone, recipient, businessName, messageText } = body;
+        const { leadRank, phone, recipient, businessName, messageText, sendInteractive = true, headerImageUrl } = body;
 
         let cleanPhone = String(phone || "").replace(/[^0-9]/g, "");
         if (cleanPhone.length === 10) cleanPhone = "91" + cleanPhone;
 
         console.log(`[Dispatch Bridge] Outbound trigger for Lead #${leadRank} (${recipient}) to ${cleanPhone}`);
 
-        const result = await sendWhatsAppMessage(cleanPhone, messageText, env);
+        let payloadToSend;
+        if (sendInteractive) {
+          payloadToSend = {
+            messaging_product: "whatsapp",
+            recipient_type: "individual",
+            to: cleanPhone,
+            type: "interactive",
+            interactive: {
+              type: "button",
+              header: {
+                type: "image",
+                image: {
+                  link: headerImageUrl || "https://indian-bison-crm-2026.web.app/icon.svg"
+                }
+              },
+              body: {
+                text: messageText || `Hey ${recipient || 'Doctor'}, noticed patients searching ${businessName || 'your clinic'} find unconfirmed evening OPD timings. Built a 30-sec WhatsApp booking slot prototype. Want me to drop the preview link?\n(Reply STOP to opt out)`
+              },
+              action: {
+                buttons: [
+                  {
+                    type: "reply",
+                    reply: {
+                      id: "BTN_VIEW_PROTOTYPE",
+                      title: "📱 View Prototype"
+                    }
+                  },
+                  {
+                    type: "reply",
+                    reply: {
+                      id: "BTN_OPT_OUT",
+                      title: "🛑 Opt Out"
+                    }
+                  }
+                ]
+              }
+            }
+          };
+        } else {
+          payloadToSend = messageText;
+        }
+
+        const result = await sendWhatsAppMessage(cleanPhone, payloadToSend, env);
         const wamid = result?.messages?.[0]?.id || `wamid.HBgM${Date.now()}`;
 
         return new Response(JSON.stringify({
@@ -61,6 +105,7 @@ export default {
           businessName: businessName || "Dental Clinic",
           phone: cleanPhone,
           wamid,
+          interactive: Boolean(sendInteractive),
           dispatchedAt: new Date().toISOString(),
           metaResponse: result
         }), {
@@ -146,18 +191,31 @@ async function handleMetaWebhook(payload, env) {
       return;
     }
 
-    // B. Handle Inbound Doctor Messages
+    // B. Handle Inbound Doctor WhatsApp Messages (text + interactive button replies)
     if (change.messages && change.messages.length > 0) {
       const msg = change.messages[0];
       const from = msg.from;
       const text = (msg.text?.body || "").trim();
       const upperText = text.toUpperCase();
 
-      console.log(`[Meta Inbound] Message from ${from}: "${text}"`);
+      const buttonId = msg.interactive?.button_reply?.id || "";
+      const buttonTitle = msg.interactive?.button_reply?.title || "";
 
-      // Case 1: Doctor replied "YES"
-      if (upperText === "YES" || upperText.includes("YES") || upperText.includes("HAAN") || upperText.includes("SURE")) {
-        console.log(`[Trigger] "YES" detected from ${from}. Generating ₹2,999 Slot-Lock order...`);
+      console.log(`[Meta Inbound] From ${from}: text="${text}", buttonId="${buttonId}", buttonTitle="${buttonTitle}"`);
+
+      const isPositiveSignal = 
+        buttonId === "BTN_VIEW_PROTOTYPE" ||
+        /view\s*prototype/i.test(buttonTitle) ||
+        upperText === "YES" || upperText.includes("YES") || upperText.includes("HAAN") || upperText.includes("SURE");
+
+      const isOptOutSignal = 
+        buttonId === "BTN_OPT_OUT" ||
+        /opt\s*out/i.test(buttonTitle) ||
+        upperText === "STOP" || upperText.includes("UNSUBSCRIBE");
+
+      // Case 1: Doctor clicked "View Prototype" button or replied "YES"
+      if (isPositiveSignal) {
+        console.log(`[Trigger] Positive signal (${buttonId || 'YES'}) from ${from}. Generating ₹2,999 Slot-Lock order...`);
 
         // Generate Razorpay Order
         const orderId = await createRazorpayOrder(env);
@@ -175,8 +233,8 @@ async function handleMetaWebhook(payload, env) {
         await sendWhatsAppMessage(from, replyMessage, env);
         console.log(`[Dispatched] Slot-Lock response sent to ${from}`);
       }
-      // Case 2: Doctor replied "STOP" (Compliance Opt-Out)
-      else if (upperText === "STOP" || upperText.includes("UNSUBSCRIBE")) {
+      // Case 2: Doctor clicked "Opt Out" button or replied "STOP" (Compliance)
+      else if (isOptOutSignal) {
         console.log(`[Compliance] "STOP" received from ${from}. Marking suppressed.`);
         await sendWhatsAppMessage(from, "You have been successfully opted out. No further automated messages will be sent.", env);
       }
@@ -216,11 +274,28 @@ async function createRazorpayOrder(env) {
   return `order_Rzp_${Date.now()}`;
 }
 
-async function sendWhatsAppMessage(recipientPhone, messageText, env) {
+async function sendWhatsAppMessage(recipientPhone, messageOrPayload, env) {
   const token = env.META_PERMANENT_ACCESS_TOKEN;
   const phoneNumberId = env.META_PHONE_NUMBER_ID || "587641237759145";
 
   if (!token) return { simulated: true, wamid: `wamid.sim_${Date.now()}` };
+
+  let reqBody;
+  if (typeof messageOrPayload === "object" && messageOrPayload !== null) {
+    if (messageOrPayload.type === "interactive") {
+      reqBody = JSON.stringify({ ...messageOrPayload, to: recipientPhone });
+    } else {
+      reqBody = JSON.stringify(messageOrPayload);
+    }
+  } else {
+    reqBody = JSON.stringify({
+      messaging_product: "whatsapp",
+      recipient_type: "individual",
+      to: recipientPhone,
+      type: "text",
+      text: { preview_url: true, body: String(messageOrPayload) }
+    });
+  }
 
   try {
     const res = await fetch(`https://graph.facebook.com/v21.0/${phoneNumberId}/messages`, {
@@ -229,13 +304,7 @@ async function sendWhatsAppMessage(recipientPhone, messageText, env) {
         "Authorization": `Bearer ${token}`,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({
-        messaging_product: "whatsapp",
-        recipient_type: "individual",
-        to: recipientPhone,
-        type: "text",
-        text: { preview_url: true, body: messageText }
-      })
+      body: reqBody
     });
     return await res.json();
   } catch (e) {
@@ -266,7 +335,7 @@ function getOPDScheduleStatusWorker(now = new Date()) {
   };
 
   if (activeWindow) {
-    const intervalMs = 21 * 60 * 1000;
+    const intervalMs = 15 * 60 * 1000;
     const nextTargetMs = Date.now() + intervalMs;
     const targetIST = new Date(nextTargetMs + 5.5 * 3600000);
     let h = targetIST.getHours() % 12 || 12;

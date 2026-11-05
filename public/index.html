@@ -615,14 +615,44 @@
                 🔒 Messages and calls are end-to-end encrypted. No one outside of this chat can read them.
               </div>
 
-              <!-- Inbound Bubble (From Indian Bison Growth Partner) -->
-              <div class="flex flex-col items-start space-y-0.5 max-w-[90%]">
-                <div class="bg-[#1F2C34] text-slate-100 p-2.5 rounded-2xl rounded-tl-none shadow-md border border-slate-800/50 leading-relaxed text-[11px]">
-                  <div class="text-[10px] font-bold text-emerald-400 mb-0.5">Indian Bison • Growth Partner</div>
-                  <div id="emulator-touch1-body" class="whitespace-pre-line text-slate-200">
+              <!-- Inbound Bubble (Interactive WhatsApp Template: Media Header + Body + Quick Reply Buttons) -->
+              <div class="flex flex-col items-start space-y-0.5 max-w-[92%]">
+                <div class="bg-[#1F2C34] text-slate-100 p-2.5 rounded-2xl rounded-tl-none shadow-md border border-slate-800/50 leading-relaxed text-[11px] w-full">
+                  <div class="text-[10px] font-bold text-emerald-400 mb-1.5 flex items-center justify-between">
+                    <span>Indian Bison • Growth Partner</span>
+                    <span class="text-[9px] font-mono text-cyan-400/90 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-800/40">Interactive Button Template</span>
+                  </div>
+
+                  <!-- Header: Visual Preview Card Mockup -->
+                  <div class="rounded-lg overflow-hidden border border-emerald-500/30 mb-2 bg-gradient-to-br from-emerald-950/90 via-slate-900 to-slate-950 p-2.5">
+                    <div class="flex items-center justify-between text-[10px] text-emerald-300 font-mono mb-1">
+                      <span class="flex items-center gap-1">🏥 <strong>Clinic Live Prototype</strong></span>
+                      <span class="bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded text-[9px] border border-emerald-500/30">24/7 OPD Bot</span>
+                    </div>
+                    <div id="emulator-card-headline" class="text-[12px] font-bold text-white leading-tight">Apex Dental • 5★ Review &amp; OPD Booking</div>
+                    <div class="text-[9px] text-slate-400 mt-1 flex items-center gap-1">
+                      <span>🔗 Verified GBP Slot Automation</span>
+                      <span>•</span>
+                      <span class="text-emerald-400">Zero Patient Drop-Off</span>
+                    </div>
+                  </div>
+
+                  <!-- Body: High-Context Message (<60 words) -->
+                  <div id="emulator-touch1-body" class="whitespace-pre-line text-slate-200 leading-snug">
                     <!-- Dynamically populated from active lead's Touch 1 message -->
                   </div>
-                  <div class="flex items-center justify-end gap-1 text-[9px] text-slate-400 mt-1">
+
+                  <!-- Interactive Action Buttons inside WhatsApp Message Bubble -->
+                  <div class="mt-2.5 pt-2 border-t border-slate-700/60 space-y-1.5">
+                    <button onclick="simulateDoctorReply('BTN_VIEW_PROTOTYPE')" class="w-full py-2 px-3 rounded-lg bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-200 border border-emerald-500/50 text-[11px] font-bold text-center flex items-center justify-center gap-1.5 transition active:scale-[0.98] shadow-sm">
+                      <span>📱 View Prototype</span>
+                    </button>
+                    <button onclick="simulateDoctorReply('BTN_OPT_OUT')" class="w-full py-1.5 px-3 rounded-lg bg-slate-800/80 hover:bg-rose-900/40 text-slate-400 hover:text-rose-300 border border-slate-700/50 text-[10px] font-medium text-center flex items-center justify-center gap-1.5 transition active:scale-[0.98]">
+                      <span>🛑 Opt Out</span>
+                    </button>
+                  </div>
+
+                  <div class="flex items-center justify-end gap-1 text-[9px] text-slate-400 mt-1.5">
                     <span id="emulator-touch1-time">11:32 AM</span>
                     <span class="text-cyan-400">✓✓</span>
                   </div>
@@ -637,11 +667,11 @@
             <div class="border-t border-slate-800 pt-2 pb-1 space-y-1.5 bg-[#0B141A]">
               <div class="text-[10px] text-slate-400 text-center font-medium">Sandbox Interaction (Test Doctor Experience):</div>
               <div class="grid grid-cols-2 gap-1.5">
-                <button onclick="simulateDoctorReply('YES')" class="px-2 py-1.5 rounded-lg text-[11px] font-bold bg-emerald-600 text-white hover:bg-emerald-500 transition shadow flex items-center justify-center gap-1">
-                  <span>💬 Doctor replies "YES"</span>
+                <button onclick="simulateDoctorReply('BTN_VIEW_PROTOTYPE')" class="px-2 py-1.5 rounded-lg text-[11px] font-bold bg-emerald-600 text-white hover:bg-emerald-500 transition shadow flex items-center justify-center gap-1">
+                  <span>📱 Click "View Prototype"</span>
                 </button>
-                <button onclick="simulateDoctorReply('STOP')" class="px-2 py-1.5 rounded-lg text-[11px] font-bold bg-rose-600/80 text-white hover:bg-rose-500 transition shadow flex items-center justify-center gap-1">
-                  <span>🚫 Doctor replies "STOP"</span>
+                <button onclick="simulateDoctorReply('BTN_OPT_OUT')" class="px-2 py-1.5 rounded-lg text-[11px] font-bold bg-rose-600/80 text-white hover:bg-rose-500 transition shadow flex items-center justify-center gap-1">
+                  <span>🛑 Click "Opt Out"</span>
                 </button>
               </div>
               <button onclick="resetEmulatorChat()" class="w-full text-[10px] text-slate-400 hover:text-slate-200 py-0.5 transition">
@@ -2591,6 +2621,32 @@ Once submitted, your sector is locked exclusively.`;
       return `${mins}m ${secs < 10 ? "0" : ""}${secs}s`;
     }
 
+    function sanitizeClinicName(name) {
+      if (!name) return "Dental Clinic";
+      return name
+        .replace(/\s*\([^)]*(?:live\s*trial|trial|\d{10})[^)]*\)/gi, "")
+        .replace(/\s*•\s*\d+/g, "")
+        .replace(/\s*\[[^\]]*\]/g, "")
+        .replace(/\s*\+\s*91\d+/g, "")
+        .trim();
+    }
+
+    function sanitizeDoctorName(name) {
+      if (!name) return "Doctor";
+      let clean = name.replace(/\s*\([^)]*\)/gi, "").replace(/\/.*$/, "").trim();
+      if (!/^Dr\.?\s+/i.test(clean) && clean.toLowerCase() !== "doctor") {
+        clean = "Dr. " + clean;
+      }
+      return clean;
+    }
+
+    function buildHighContextColdMessage(lead) {
+      const docName = sanitizeDoctorName(lead.recipient);
+      const clinicName = sanitizeClinicName(lead.business_name);
+      const sector = (lead.locality || lead.address || "Greater Noida").split(",")[0].trim();
+      return `Hey ${docName}, noticed patients searching ${clinicName} in ${sector} find unconfirmed evening OPD timings and no direct booking link on your Google profile.\n\nBuilt a 30-second interactive prototype showing how a 24/7 WhatsApp booking slot & 5★ review shield fixes this.\n\nWant me to drop the preview link here?\n(Reply STOP to opt out)`;
+    }
+
     function getNextUncontactedLeadRank() {
       const uncontacted = leads.find(l => !l.status || l.status === "Not Contacted");
       if (uncontacted) return uncontacted.rank;
@@ -2610,9 +2666,10 @@ Once submitted, your sector is locked exclusively.`;
         return;
       }
 
-      // Generate personalized <60-word hook message
-      const hookMsg = (typeof hooks !== "undefined" && hooks.default) ? hooks.default(targetLead) : 
-        `Hi ${targetLead.recipient}, noticed your clinic listing in Greater Noida has friction confirming evening OPD hours and manual booking. We built a live interactive WhatsApp prototype for you: https://indian-bison-crm-2026.web.app/preview.html?rank=${targetLead.rank}`;
+      // Generate sanitized high-context <60-word hook message
+      const cleanDoc = sanitizeDoctorName(targetLead.recipient);
+      const cleanClinic = sanitizeClinicName(targetLead.business_name);
+      const hookMsg = buildHighContextColdMessage(targetLead);
 
       let cleanPhone = (targetLead.phone_whatsapp || "").replace(/[^0-9]/g, "");
       if (cleanPhone.length === 10) cleanPhone = "91" + cleanPhone;
@@ -2627,9 +2684,10 @@ Once submitted, your sector is locked exclusively.`;
           body: JSON.stringify({
             leadRank: targetLead.rank,
             phone: cleanPhone,
-            recipient: targetLead.recipient,
-            businessName: targetLead.business_name,
-            messageText: hookMsg
+            recipient: cleanDoc,
+            businessName: cleanClinic,
+            messageText: hookMsg,
+            sendInteractive: true
           })
         });
         if (res.ok) {
@@ -2921,20 +2979,25 @@ Once submitted, your sector is locked exclusively.`;
       const lead = leads.find(l => l.rank === activeRank) || leads[0];
       if (!lead) return;
 
+      const cleanDoc = sanitizeDoctorName(lead.recipient);
+      const cleanClinic = sanitizeClinicName(lead.business_name);
+
       const title = document.getElementById("emulator-lead-title");
       const docName = document.getElementById("emulator-chat-doctor");
       const clinicName = document.getElementById("emulator-chat-clinic");
       const avatar = document.getElementById("emulator-avatar");
       const touch1Body = document.getElementById("emulator-touch1-body");
+      const cardHeadline = document.getElementById("emulator-card-headline");
 
-      if (title) title.textContent = `#${lead.rank} ${lead.recipient} (${lead.business_name})`;
-      if (docName) docName.textContent = lead.recipient;
-      if (clinicName) clinicName.textContent = `online • ${lead.business_name}`;
+      if (title) title.textContent = `#${lead.rank} ${cleanDoc} (${cleanClinic})`;
+      if (docName) docName.textContent = cleanDoc;
+      if (clinicName) clinicName.textContent = `online • ${cleanClinic}`;
+      if (cardHeadline) cardHeadline.textContent = `${cleanClinic} • 5★ Review & OPD Booking`;
       
-      const initials = (lead.recipient || "Dr").replace(/Dr\.?\s*/i, "").split(" ").map(w => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
+      const initials = cleanDoc.replace(/Dr\.?\s*/i, "").split(" ").map(w => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
       if (avatar) avatar.textContent = initials || "DR";
 
-      const currentMsg = document.getElementById("inspector-message")?.value || hooks.default(lead);
+      const currentMsg = buildHighContextColdMessage(lead);
       if (touch1Body) touch1Body.textContent = currentMsg;
     }
 
@@ -2944,13 +3007,22 @@ Once submitted, your sector is locked exclusively.`;
       if (!thread || !lead) return;
 
       const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const cleanDoc = sanitizeDoctorName(lead.recipient);
+      const cleanClinic = sanitizeClinicName(lead.business_name);
 
-      if (choice === "YES") {
+      const isPositive = (choice === "YES" || choice === "BTN_VIEW_PROTOTYPE");
+      const isOptOut = (choice === "STOP" || choice === "BTN_OPT_OUT");
+
+      if (isPositive) {
         const docBubble = document.createElement("div");
         docBubble.className = "flex flex-col items-end space-y-0.5 ml-auto max-w-[85%]";
+        const buttonFeedbackText = choice === "BTN_VIEW_PROTOTYPE" 
+          ? `📱 <em>Clicked [View Prototype]</em><div class="mt-1">Yes, send details. How does this work for ${cleanClinic}?</div>`
+          : `Yes, send details. How does this work for ${cleanClinic}?`;
+
         docBubble.innerHTML = `
           <div class="bg-[#005C4B] text-white p-2.5 rounded-2xl rounded-tr-none shadow-md leading-relaxed text-[11px]">
-            <div>Yes, send details. How does this work for ${lead.business_name}?</div>
+            <div>${buttonFeedbackText}</div>
             <div class="flex items-center justify-end gap-1 text-[9px] text-emerald-200 mt-1">
               <span>${timeStr}</span>
               <span class="text-cyan-300">✓✓</span>
@@ -2966,7 +3038,7 @@ Once submitted, your sector is locked exclusively.`;
           botBubble.innerHTML = `
             <div class="bg-[#1F2C34] text-slate-100 p-3 rounded-2xl rounded-tl-none shadow-md border border-emerald-500/40 leading-relaxed text-[11px] space-y-2">
               <div class="text-[10px] font-bold text-emerald-400">Indian Bison • Automated Response</div>
-              <div>Great ${lead.recipient}! Here is the 30-sec live prototype showing how patients book slots on WhatsApp for ${lead.business_name}:</div>
+              <div>Great ${cleanDoc}! Here is the 30-sec live prototype showing how patients book slots on WhatsApp for ${cleanClinic}:</div>
               
               <div class="bg-[#111B21] border border-emerald-500/40 rounded-xl p-2.5 space-y-1.5 cursor-pointer hover:border-emerald-400 transition" onclick="openPaymentPreviewModal()">
                 <div class="text-[10px] font-bold text-emerald-300 flex items-center justify-between">
@@ -2999,17 +3071,18 @@ Once submitted, your sector is locked exclusively.`;
 
           logDashboardActivity(
             "DOCTOR_REPLIED",
-            `Doctor simulated reply "YES" for #${lead.rank} ${lead.business_name}. Prototype link & ₹2,999 slot-lock delivered!`,
+            `Doctor simulated reply "${choice}" for #${lead.rank} ${cleanClinic}. Prototype link & ₹2,999 slot-lock delivered!`,
             lead.rank
           );
         }, 500);
 
-      } else if (choice === "STOP") {
+      } else if (isOptOut) {
         const docBubble = document.createElement("div");
         docBubble.className = "flex flex-col items-end space-y-0.5 ml-auto max-w-[85%]";
+        const optOutText = choice === "BTN_OPT_OUT" ? "🛑 <em>Clicked [Opt Out]</em> (STOP)" : "STOP";
         docBubble.innerHTML = `
           <div class="bg-[#005C4B] text-white p-2.5 rounded-2xl rounded-tr-none shadow-md leading-relaxed text-[11px]">
-            <div>STOP</div>
+            <div>${optOutText}</div>
             <div class="flex items-center justify-end gap-1 text-[9px] text-emerald-200 mt-1">
               <span>${timeStr}</span>
               <span class="text-cyan-300">✓✓</span>
@@ -3040,7 +3113,7 @@ Once submitted, your sector is locked exclusively.`;
 
           logDashboardActivity(
             "OPT_OUT",
-            `Doctor simulated opt-out "STOP" for #${lead.rank} ${lead.business_name}. Lead marked Opted-Out.`,
+            `Doctor simulated opt-out "${choice}" for #${lead.rank} ${cleanClinic}. Lead marked Opted-Out.`,
             lead.rank
           );
         }, 400);

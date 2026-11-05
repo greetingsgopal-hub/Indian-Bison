@@ -202,16 +202,28 @@ async function handleInboundWebhook(req, res) {
       }
     }
 
-    // B) Inbound Doctor WhatsApp Messages ("YES", "STOP", Inquiries)
+    // B) Inbound Doctor WhatsApp Messages ("YES", "STOP", Interactive Button Clicks, Inquiries)
     if (Array.isArray(changes?.messages)) {
       for (const msg of changes.messages) {
         const fromPhone = msg.from;
         const textBody = (msg.text?.body || msg.body || "").trim();
+        const buttonReplyId = msg.interactive?.button_reply?.id || "";
+        const buttonReplyTitle = msg.interactive?.button_reply?.title || "";
         const lead = findLeadByPhone(fromPhone);
 
-        // CASE A: Doctor replies "YES" (case-insensitive)
-        if (/\byes\b/i.test(textBody)) {
-          console.log(`[Meta Webhook] Doctor replied "YES" from ${fromPhone} (Lead #${lead.rank})`);
+        const isPositiveSignal = 
+          buttonReplyId === "BTN_VIEW_PROTOTYPE" || 
+          /\b(view\s*prototype|prototype|haan|sure)\b/i.test(buttonReplyTitle) || 
+          /\byes\b/i.test(textBody);
+
+        const isOptOutSignal = 
+          buttonReplyId === "BTN_OPT_OUT" || 
+          /\b(opt\s*out|stop|unsubscribe)\b/i.test(buttonReplyTitle) || 
+          /\bstop\b/i.test(textBody);
+
+        // CASE A: Doctor taps "View Prototype" button or replies "YES"
+        if (isPositiveSignal) {
+          console.log(`[Meta Webhook] Doctor positive signal (${buttonReplyId || "YES"}) from ${fromPhone} (Lead #${lead.rank})`);
 
           // 1. Generate live ₹2,999 Razorpay slot-lock order (amount: 299900 INR)
           const razorpayOrder = await createRazorpaySlotLockOrder(lead);
@@ -228,7 +240,7 @@ async function handleInboundWebhook(req, res) {
           await updateLeadRecord(lead.rank, {
             status: "Prototype Sent",
             doctor_replied: true,
-            doctor_reply_text: textBody,
+            doctor_reply_text: buttonReplyTitle || textBody || "BTN_VIEW_PROTOTYPE",
             doctor_replied_at: new Date().toISOString(),
             slot_lock_url: previewUrl,
             razorpay_order_id: razorpayOrder.id
@@ -243,13 +255,13 @@ async function handleInboundWebhook(req, res) {
             status: "Prototype Sent",
             wamid: sendRes?.wamid || msg.id,
             actor: "DoctorInbound",
-            payload_summary: `Doctor replied "YES"! Razorpay order ${razorpayOrder.id} (₹2,999) created. Automated slot-lock sent via Meta API.`,
+            payload_summary: `Doctor clicked "${buttonReplyTitle || 'YES'}"! Razorpay order ${razorpayOrder.id} (₹2,999) created. Automated slot-lock sent via Meta API.`,
             raw_payload: { inbound: msg, outbound: sendRes, previewUrl, razorpayOrder }
           });
 
-        // CASE B: Doctor replies "STOP" (Opt-Out compliance)
-        } else if (/\bstop\b/i.test(textBody)) {
-          console.log(`[Meta Webhook] Doctor replied "STOP" from ${fromPhone} (Lead #${lead.rank})`);
+        // CASE B: Doctor taps "Opt Out" button or replies "STOP" (Compliance)
+        } else if (isOptOutSignal) {
+          console.log(`[Meta Webhook] Doctor opted out (${buttonReplyId || "STOP"}) from ${fromPhone} (Lead #${lead.rank})`);
 
           const optOutNotice = `You have been unsubscribed from Indian Bison Dental CRM. No further messages will be sent to ${fromPhone}.`;
           await sendMetaCloudWhatsApp(fromPhone, optOutNotice, false);
@@ -269,7 +281,7 @@ async function handleInboundWebhook(req, res) {
             phone_whatsapp: lead.phone_whatsapp,
             status: "Opted Out",
             actor: "DoctorInbound",
-            payload_summary: `Doctor replied "STOP". Lead permanently suppressed and unsubscribed.`,
+            payload_summary: `Doctor clicked "${buttonReplyTitle || 'STOP'}". Lead permanently suppressed and unsubscribed.`,
             raw_payload: msg
           });
 

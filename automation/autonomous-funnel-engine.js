@@ -39,34 +39,99 @@ const CONFIG = {
   ]
 };
 
+function sanitizeClinicName(name) {
+  if (!name) return "Dental Clinic";
+  return name
+    .replace(/\s*\([^)]*(?:live\s*trial|trial|\d{10})[^)]*\)/gi, "")
+    .replace(/\s*•\s*\d+/g, "")
+    .replace(/\s*\[[^\]]*\]/g, "")
+    .replace(/\s*\+\s*91\d+/g, "")
+    .trim();
+}
+
+function sanitizeDoctorName(name) {
+  if (!name) return "Doctor";
+  let clean = name.replace(/\s*\([^)]*\)/gi, "").replace(/\/.*$/, "").trim();
+  if (!/^Dr\.?\s+/i.test(clean) && clean.toLowerCase() !== "doctor") {
+    clean = "Dr. " + clean;
+  }
+  return clean;
+}
+
+/**
+ * High-Converting Local Clinic Cold Hook (<60 words, Zero Generic Fluff + STOP Trapdoor)
+ */
+function buildHighContextColdMessage(lead) {
+  const docName = sanitizeDoctorName(lead.recipient);
+  const clinicName = sanitizeClinicName(lead.business_name);
+  const sector = (lead.locality || "Greater Noida").split(",")[0].trim();
+  return `Hey ${docName}, noticed patients searching ${clinicName} in ${sector} find unconfirmed evening OPD timings and no direct booking link on your Google profile.\n\nBuilt a 30-second interactive prototype showing how a 24/7 WhatsApp booking slot & 5★ review shield fixes this.\n\nWant me to drop the preview link here?\n(Reply STOP to opt out)`;
+}
+
+/**
+ * Pre-Approved Interactive Message Builder (Image Header + Body + Quick Reply Buttons)
+ */
+function buildInteractiveOutreachPayload(lead, customOptions = {}) {
+  const cleanPhone = String(lead.phone_whatsapp || "").replace(/[^0-9]/g, "");
+  const bodyText = customOptions.bodyText || buildHighContextColdMessage(lead);
+  const headerImageUrl = customOptions.headerImageUrl || "https://indian-bison-crm-2026.web.app/icon.svg";
+
+  return {
+    messaging_product: "whatsapp",
+    recipient_type: "individual",
+    to: cleanPhone,
+    type: "interactive",
+    interactive: {
+      type: "button",
+      header: {
+        type: "image",
+        image: {
+          link: headerImageUrl
+        }
+      },
+      body: {
+        text: bodyText
+      },
+      action: {
+        buttons: [
+          {
+            type: "reply",
+            reply: {
+              id: "BTN_VIEW_PROTOTYPE",
+              title: "📱 View Prototype"
+            }
+          },
+          {
+            type: "reply",
+            reply: {
+              id: "BTN_OPT_OUT",
+              title: "🛑 Opt Out"
+            }
+          }
+        ]
+      }
+    }
+  };
+}
+
 /**
  * Layer 2 Anti-Ban: Polymorphic Spintax Generator (<60 words, Zero Cold Links + STOP Trapdoor)
  */
 function buildPolymorphicColdMessage(lead) {
-  const greetings = ["Hi", "Hello", "Greetings", "Hey"];
-  const verbs = ["checked", "noticed", "looked up", "came across"];
-  const closings = [
-    "Open to a quick 1-minute breakdown?",
-    "Would you like me to share the 30-second preview here?",
-    "Can I send over the live Sector demo we mocked up for you?"
-  ];
-
-  const g = greetings[lead.rank % greetings.length];
-  const v = verbs[lead.rank % verbs.length];
-  const c = closings[lead.rank % closings.length];
-
-  return `${g} ${lead.recipient}, I ${v} ${lead.business_name} on Google Maps today and noticed ${lead.pain_short}.\n\nI help Greater Noida dental clinics fix these exact leaks with ${lead.fix_short}.\n\n${c}\n(Reply STOP to opt out)`;
+  return buildHighContextColdMessage(lead);
 }
 
 /**
  * Instant Live Prototype + ₹2,999/- Razorpay Slot-Lock Deposit Reply
  */
 function buildInstantPrototypeAndDepositReply(lead) {
-  const sectorShort = (lead.locality || "Greater Noida").split(",")[0];
+  const docName = sanitizeDoctorName(lead.recipient);
+  const clinicName = sanitizeClinicName(lead.business_name);
+  const sectorShort = (lead.locality || "Greater Noida").split(",")[0].trim();
   const previewUrl = `${CONFIG.HOSTING_BASE_URL}/preview.html?rank=${lead.rank}`;
   const balance = (lead.setup_fee_inr || 18500) - CONFIG.SLOT_LOCK_DEPOSIT_INR;
 
-  return `Hi ${lead.recipient}, here is the live interactive booking & 5-star rating-shield prototype built for ${lead.business_name} (${sectorShort}):\n${previewUrl}\n\n*Zero-Risk Launch Terms:*\n• Total Setup: ₹${(lead.setup_fee_inr || 18500).toLocaleString("en-IN")} (${lead.package_name})\n• *To Lock ${sectorShort} Exclusivity & Start Build Today:* Just *₹2,999/- Slot-Lock Deposit* via Razorpay UPI/Card directly on the preview page.\n• *Balance (₹${balance.toLocaleString("en-IN")}):* Payable ONLY after your live system is delivered in 5 days.\n\nTap the link above to test the 05:30 PM OPD slot booking and lock your sector!`;
+  return `Hi ${docName}, here is the live interactive booking & 5-star rating-shield prototype built for ${clinicName} (${sectorShort}):\n${previewUrl}\n\n*Zero-Risk Launch Terms:*\n• Total Setup: ₹${(lead.setup_fee_inr || 18500).toLocaleString("en-IN")} (${lead.package_name})\n• *To Lock ${sectorShort} Exclusivity & Start Build Today:* Just *₹2,999/- Slot-Lock Deposit* via Razorpay UPI/Card directly on the preview page.\n• *Balance (₹${balance.toLocaleString("en-IN")}):* Payable ONLY after your live system is delivered in 5 days.\n\nTap the link above to test the 05:30 PM OPD slot booking and lock your sector!`;
 }
 
 /**
@@ -245,11 +310,15 @@ function getScheduleStatus(now = new Date(), currentTargetMs = null, jitterMinut
 
 /**
  * Meta Official WhatsApp Cloud API Sender (`POST /v21.0/{Phone-Number-ID}/messages`)
+ * Supports both text strings and full Meta interactive button payloads.
  */
-function sendMetaCloudWhatsApp(toPhoneE164, messageText, previewUrl = false, customCredentials = {}) {
+function sendMetaCloudWhatsApp(toPhoneE164, messageOrPayload, previewUrl = false, customCredentials = {}) {
   const cleanPhone = String(toPhoneE164 || "").replace(/[^0-9]/g, "");
   const phoneId = customCredentials.phoneId || CONFIG.META_PHONE_NUMBER_ID;
   const accessToken = customCredentials.accessToken || CONFIG.META_ACCESS_TOKEN;
+
+  const isInteractive = typeof messageOrPayload === "object" && messageOrPayload !== null;
+  const bodyTextForLog = isInteractive ? (messageOrPayload.interactive?.body?.text || "Interactive Button Payload") : String(messageOrPayload);
 
   if (!phoneId || !accessToken) {
     return Promise.resolve({
@@ -257,18 +326,25 @@ function sendMetaCloudWhatsApp(toPhoneE164, messageText, previewUrl = false, cus
       to: cleanPhone,
       wamid: `wamid.sim_${Date.now()}`,
       preview_url: previewUrl,
-      body: messageText
+      body: bodyTextForLog,
+      isInteractive
     });
   }
 
   return new Promise((resolve) => {
-    const payload = JSON.stringify({
-      messaging_product: "whatsapp",
-      recipient_type: "individual",
-      to: cleanPhone,
-      type: "text",
-      text: { preview_url: previewUrl, body: messageText }
-    });
+    let payload;
+    if (isInteractive) {
+      const interactivePayload = { ...messageOrPayload, to: cleanPhone };
+      payload = JSON.stringify(interactivePayload);
+    } else {
+      payload = JSON.stringify({
+        messaging_product: "whatsapp",
+        recipient_type: "individual",
+        to: cleanPhone,
+        type: "text",
+        text: { preview_url: previewUrl, body: messageOrPayload }
+      });
+    }
 
     const req = https.request({
       hostname: "graph.facebook.com",
@@ -292,17 +368,19 @@ function sendMetaCloudWhatsApp(toPhoneE164, messageText, previewUrl = false, cus
               api_error: parsed.error,
               wamid: `wamid.fallback_${Date.now()}`,
               to: cleanPhone,
-              body: messageText
+              body: bodyTextForLog,
+              isInteractive
             });
           } else {
             resolve({
               simulated: false,
               wamid: parsed?.messages?.[0]?.id || `wamid.${Date.now()}`,
-              raw: parsed
+              raw: parsed,
+              isInteractive
             });
           }
         } catch (e) {
-          resolve({ simulated: true, wamid: `wamid.sim_${Date.now()}`, raw: data });
+          resolve({ simulated: true, wamid: `wamid.sim_${Date.now()}`, raw: data, isInteractive });
         }
       });
     });
@@ -312,7 +390,8 @@ function sendMetaCloudWhatsApp(toPhoneE164, messageText, previewUrl = false, cus
         fallback_reason: err.message,
         wamid: `wamid.offline_${Date.now()}`,
         to: cleanPhone,
-        body: messageText
+        body: bodyTextForLog,
+        isInteractive
       });
     });
     req.write(payload);
@@ -322,8 +401,8 @@ function sendMetaCloudWhatsApp(toPhoneE164, messageText, previewUrl = false, cus
 
 /**
  * Step 1.2: Instant Manual Trigger per Clinic (Bypasses Queue & OPD Window)
- * Fires Touch #1 immediately via Meta Cloud API, updates Firestore status to `WhatsApp Sent`,
- * and appends an audit entry to `funnel_events`.
+ * Fires Touch #1 immediately via Meta Cloud API using interactive template by default,
+ * updates Firestore status to `WhatsApp Sent`, and appends an audit entry to `funnel_events`.
  */
 async function dispatchSingleLeadManual(leadOrId, options = {}) {
   const lead = typeof leadOrId === "object" ? leadOrId : {
@@ -331,19 +410,28 @@ async function dispatchSingleLeadManual(leadOrId, options = {}) {
     business_name: options.business_name || `Clinic #${leadOrId}`,
     recipient: options.recipient || "Doctor",
     phone_whatsapp: options.phone_whatsapp || "+916209228845",
-    pain_short: options.pain_short || "no website link and manual appointment scheduling",
-    fix_short: options.fix_short || "automated WhatsApp slot booking and a 5-star rating shield"
+    pain_short: options.pain_short || "unconfirmed evening OPD timings and no direct booking link",
+    fix_short: options.fix_short || "a 24/7 WhatsApp booking slot & 5★ review shield"
   };
 
-  const hookText = options.customHookText || buildPolymorphicColdMessage(lead);
-  const apiResult = await sendMetaCloudWhatsApp(lead.phone_whatsapp, hookText, false, options);
+  lead.business_name = sanitizeClinicName(lead.business_name);
+  lead.recipient = sanitizeDoctorName(lead.recipient);
+
+  // Build Interactive Button Payload (or fallback to customHookText)
+  const interactivePayload = buildInteractiveOutreachPayload(lead, {
+    bodyText: options.customHookText
+  });
+
+  const apiResult = await sendMetaCloudWhatsApp(lead.phone_whatsapp, interactivePayload, false, options);
   const wamid = apiResult.wamid || `wamid.manual_${Date.now()}`;
+  const hookText = interactivePayload.interactive.body.text;
 
   await updateLeadRecord(lead.rank, {
     status: "WhatsApp Sent",
     waba_message_id: wamid,
     last_contacted_at: new Date().toISOString(),
-    custom_message: hookText
+    custom_message: hookText,
+    interactive_template: true
   });
 
   const auditEntry = await appendFunnelEvent({
@@ -354,9 +442,9 @@ async function dispatchSingleLeadManual(leadOrId, options = {}) {
     phone_whatsapp: lead.phone_whatsapp,
     status: "WhatsApp Sent",
     wamid,
-    actor: "ManualOverride (Bypass Queue)",
-    payload_summary: `Instant Touch #1 sent to ${lead.business_name} (${lead.phone_whatsapp}) [${wamid}]`,
-    raw_payload: { hookText, apiResult }
+    actor: "ManualOverride (Interactive Template)",
+    payload_summary: `Interactive Touch #1 sent to ${lead.business_name} (${lead.phone_whatsapp}) [${wamid}]`,
+    raw_payload: { interactivePayload, apiResult }
   });
 
   return {
@@ -571,9 +659,13 @@ module.exports = {
   dispatchSingleLeadManual,
   getScheduleStatus,
   buildPolymorphicColdMessage,
+  buildHighContextColdMessage,
+  buildInteractiveOutreachPayload,
   buildInstantPrototypeAndDepositReply,
   buildCallSlotRequestReply,
   getCallSlotOptionsIST,
   handleInboundWhatsAppWebhook,
-  sendMetaCloudWhatsApp
+  sendMetaCloudWhatsApp,
+  sanitizeClinicName,
+  sanitizeDoctorName
 };

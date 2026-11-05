@@ -17,13 +17,32 @@ const recentFunnelEvents = [
     timestamp: new Date(Date.now() - 360000).toISOString(),
     lead_rank: 21,
     lead_id: "lead_21",
-    business_name: "Apex Dental & Implant Studio (Live Trial)",
+    business_name: "Apex Dental & Implant Studio",
     phone_whatsapp: "+916209228845",
     status: "SCHEDULED",
     actor: "AutoScheduler",
     payload_summary: "Hybrid Dispatcher armed: Mon–Sat 10:30–13:30 & 17:00–20:30 IST (Jitter: 4m–9m)."
   }
 ];
+
+function sanitizeClinicName(name) {
+  if (!name) return "Dental Clinic";
+  return name
+    .replace(/\s*\([^)]*(?:live\s*trial|trial|\d{10})[^)]*\)/gi, "")
+    .replace(/\s*•\s*\d+/g, "")
+    .replace(/\s*\[[^\]]*\]/g, "")
+    .replace(/\s*\+\s*91\d+/g, "")
+    .trim();
+}
+
+function sanitizeDoctorName(name) {
+  if (!name) return "Doctor";
+  let clean = name.replace(/\s*\([^)]*\)/gi, "").replace(/\/.*$/, "").trim();
+  if (!/^Dr\.?\s+/i.test(clean) && clean.toLowerCase() !== "doctor") {
+    clean = "Dr. " + clean;
+  }
+  return clean;
+}
 
 function toFirestoreValue(val) {
   if (typeof val === "string") return { stringValue: val };
@@ -155,8 +174,8 @@ function getAllLeads() {
   if (!cachedLeads.some(l => l.rank === 21)) {
     cachedLeads.push({
       rank: 21,
-      business_name: "Apex Dental & Implant Studio (Live Trial)",
-      recipient: "Dr. Gopal / Practice Manager",
+      business_name: "Apex Dental & Implant Studio",
+      recipient: "Dr. Gopal",
       locality: "Sector Alpha-1, Greater Noida",
       phone_whatsapp: "+916209228845",
       package_name: "Full Clinic Website + 24/7 WhatsApp Slot Bot + Rating Shield",
@@ -173,13 +192,23 @@ function findLeadByPhone(rawPhone) {
   const digits = String(rawPhone).replace(/[^0-9]/g, "");
   const last10 = digits.slice(-10);
   const leads = getAllLeads();
-  return leads.find(l => {
+  const matched = leads.find(l => {
     const lDigits = String(l.phone_whatsapp || "").replace(/[^0-9]/g, "");
     return lDigits.endsWith(last10) || digits.endsWith(lDigits.slice(-10));
-  }) || {
+  });
+
+  if (matched) {
+    return {
+      ...matched,
+      business_name: sanitizeClinicName(matched.business_name),
+      recipient: sanitizeDoctorName(matched.recipient)
+    };
+  }
+
+  return {
     rank: 21,
-    business_name: `Prospect (${rawPhone})`,
-    recipient: "Doctor",
+    business_name: "Apex Dental & Implant Studio",
+    recipient: "Dr. Gopal",
     phone_whatsapp: rawPhone.startsWith("+") ? rawPhone : `+${rawPhone}`,
     setup_fee_inr: 18500
   };
@@ -193,5 +222,7 @@ module.exports = {
   getRecentFunnelEvents,
   firestoreRequest,
   getAllLeads,
-  findLeadByPhone
+  findLeadByPhone,
+  sanitizeClinicName,
+  sanitizeDoctorName
 };
