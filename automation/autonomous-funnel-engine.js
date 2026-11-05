@@ -111,50 +111,135 @@ function buildCallSlotRequestReply(lead) {
  * Compute live OPD Dispatch Window & Next Automatic Batch Countdown (IST)
  * Standard schedule: Mon–Sat, 10:30 AM – 1:30 PM & 5:00 PM – 8:30 PM IST
  */
-function getScheduleStatus(now = new Date()) {
-  const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
+function getScheduleStatus(now = new Date(), currentTargetMs = null, jitterMinutes = 6) {
+  const currentTimeMs = now instanceof Date ? now.getTime() : Number(now);
+  const utcMs = currentTimeMs + new Date(currentTimeMs).getTimezoneOffset() * 60000;
   const istNow = new Date(utcMs + 5.5 * 3600000);
   const day = istNow.getDay(); // 0 = Sun, 1..6 = Mon..Sat
   const hourDecimal = istNow.getHours() + istNow.getMinutes() / 60 + istNow.getSeconds() / 3600;
 
   const isMonToSat = day >= 1 && day <= 6;
+  const MORNING_START = 10.5; // 10:30 AM
+  const MORNING_END = 13.5;   // 01:30 PM
+  const EVENING_START = 17.0; // 05:00 PM
+  const EVENING_END = 20.5;   // 08:30 PM
+
   let activeWindow = null;
+  let windowEndDecimal = 0;
 
   if (isMonToSat) {
-    for (const w of CONFIG.ALLOWED_OPD_WINDOWS_IST) {
-      if (hourDecimal >= w.start && hourDecimal <= w.end) {
-        activeWindow = w;
-        break;
-      }
+    if (hourDecimal >= MORNING_START && hourDecimal < MORNING_END) {
+      activeWindow = { label: "Morning OPD Window", start: MORNING_START, end: MORNING_END };
+      windowEndDecimal = MORNING_END;
+    } else if (hourDecimal >= EVENING_START && hourDecimal < EVENING_END) {
+      activeWindow = { label: "Evening OPD Window", start: EVENING_START, end: EVENING_END };
+      windowEndDecimal = EVENING_END;
     }
   }
 
-  let nextBatchTimeLabel = "10:30 AM IST";
-  let secondsUntilNext = 0;
+  const formatTime12h = (d) => {
+    const ist = new Date(d.getTime() + d.getTimezoneOffset() * 60000 + 5.5 * 3600000);
+    let h = ist.getHours();
+    const m = ist.getMinutes();
+    const ampm = h >= 12 ? "PM" : "AM";
+    h = h % 12 || 12;
+    const mStr = m < 10 ? "0" + m : m;
+    return `${h}:${mStr} ${ampm}`;
+  };
 
+  const formatCountdownStr = (ms) => {
+    if (ms <= 0) return "0s";
+    const totalSecs = Math.floor(ms / 1000);
+    const hours = Math.floor(totalSecs / 3600);
+    const mins = Math.floor((totalSecs % 3600) / 60);
+    const secs = totalSecs % 60;
+    if (hours > 0) return `${hours}h ${mins}m`;
+    return `${mins}m ${secs < 10 ? "0" : ""}${secs}s`;
+  };
+
+  let nextTargetMs = currentTargetMs ? Number(currentTargetMs) : null;
+  let rolloverTriggered = false;
+
+  // Case 1: Currently Inside Active OPD Window
   if (activeWindow) {
-    nextBatchTimeLabel = `Active Now (${activeWindow.label})`;
-    secondsUntilNext = 0;
-  } else if (isMonToSat && hourDecimal < 10.5) {
-    nextBatchTimeLabel = "Today 10:30 AM IST";
-    secondsUntilNext = Math.round((10.5 - hourDecimal) * 3600);
-  } else if (isMonToSat && hourDecimal > 13.5 && hourDecimal < 17.0) {
-    nextBatchTimeLabel = "Today 05:00 PM IST";
-    secondsUntilNext = Math.round((17.0 - hourDecimal) * 3600);
-  } else {
-    // Next morning 10:30 AM (skip Sunday if today is Saturday)
-    const daysToAdd = day === 6 ? 2 : 1;
-    nextBatchTimeLabel = `${daysToAdd === 2 ? "Mon" : "Tomorrow"} 10:30 AM IST`;
-    secondsUntilNext = Math.round(((24 - hourDecimal) + (daysToAdd - 1) * 24 + 10.5) * 3600);
+    // If target timestamp is not set or has already elapsed (now >= target)
+    if (!nextTargetMs || currentTimeMs >= nextTargetMs) {
+      rolloverTriggered = true;
+      const intervalMs = (15 + (jitterMinutes || 6)) * 60 * 1000;
+      nextTargetMs = currentTimeMs + intervalMs;
+    }
+
+    // Check if target pushes beyond active window
+    const targetUtc = nextTargetMs + new Date(nextTargetMs).getTimezoneOffset() * 60000;
+    const targetIST = new Date(targetUtc + 5.5 * 3600000);
+    const targetHourDecimal = targetIST.getHours() + targetIST.getMinutes() / 60 + targetIST.getSeconds() / 3600;
+
+    if (targetHourDecimal >= windowEndDecimal || targetIST.getDate() !== istNow.getDate()) {
+      if (windowEndDecimal === MORNING_END) {
+        // Roll to Today 5:00 PM IST
+        const nextW = new Date(currentTimeMs);
+        nextW.setHours(17, 0, 0, 0);
+        nextTargetMs = nextW.getTime();
+      } else {
+        // Roll to Tomorrow 10:30 AM IST (or Monday)
+        const daysToAdd = day === 6 ? 2 : 1;
+        const nextW = new Date(currentTimeMs);
+        nextW.setDate(nextW.getDate() + daysToAdd);
+        nextW.setHours(10, 30, 0, 0);
+        nextTargetMs = nextW.getTime();
+      }
+    }
+
+    const remainingMs = Math.max(0, nextTargetMs - currentTimeMs);
+    const formattedTargetTime = formatTime12h(new Date(nextTargetMs));
+    const countdown = formatCountdownStr(remainingMs);
+
+    return {
+      windowOpen: true,
+      windowLabel: `OPEN (${activeWindow.label})`,
+      nextBatchLabel: `${formattedTargetTime} (In ${countdown})`,
+      nextTargetMs,
+      rolloverTriggered,
+      secondsUntilNext: Math.round(remainingMs / 1000),
+      formattedCountdown: countdown,
+      displayText: `Next OPD: ${formattedTargetTime} (In ${countdown})`,
+      jitterActive: true,
+      jitterRangeLabel: `±${jitterMinutes || 6}m Jitter`
+    };
   }
 
+  // Case 2: Outside OPD Window
+  let nextWindowDate = new Date(currentTimeMs);
+  let nextWindowTimeLabel = "";
+
+  if (isMonToSat && hourDecimal < MORNING_START) {
+    nextWindowDate.setHours(10, 30, 0, 0);
+    nextWindowTimeLabel = "10:30 AM";
+  } else if (isMonToSat && hourDecimal >= MORNING_END && hourDecimal < EVENING_START) {
+    nextWindowDate.setHours(17, 0, 0, 0);
+    nextWindowTimeLabel = "5:00 PM";
+  } else {
+    const daysToAdd = day === 6 ? 2 : 1;
+    nextWindowDate.setDate(nextWindowDate.getDate() + daysToAdd);
+    nextWindowDate.setHours(10, 30, 0, 0);
+    nextWindowTimeLabel = daysToAdd === 2 ? "Mon 10:30 AM" : "Tomorrow 10:30 AM";
+  }
+
+  nextTargetMs = nextWindowDate.getTime();
+  const remainingMs = Math.max(0, nextTargetMs - currentTimeMs);
+  const countdown = formatCountdownStr(remainingMs);
+
   return {
-    windowOpen: Boolean(activeWindow),
-    windowLabel: activeWindow ? `OPEN (${activeWindow.label})` : "CLOSED (Outside OPD Hours)",
-    nextBatchLabel: nextBatchTimeLabel,
-    secondsUntilNext,
+    windowOpen: false,
+    windowLabel: "CLOSED (Outside OPD Hours)",
+    nextBatchLabel: `Next Window: ${nextWindowTimeLabel} (In ${countdown})`,
+    nextTargetMs,
+    rolloverTriggered: currentTimeMs >= (currentTargetMs || 0),
+    secondsUntilNext: Math.round(remainingMs / 1000),
+    formattedCountdown: countdown,
+    displayText: `Outside OPD Window | Next Window: ${nextWindowTimeLabel} (In ${countdown})`,
     jitterActive: true,
-    jitterRangeLabel: "Active (4m–9m Human Jitter)"
+    jitterRangeLabel: `±${jitterMinutes || 6}m Jitter`
   };
 }
 

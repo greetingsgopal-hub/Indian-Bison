@@ -20,6 +20,14 @@ export default {
       });
     }
 
+    // 1.1 OPD Schedule Status Endpoint
+    if (url.pathname === "/api/schedule-status") {
+      const schedule = getOPDScheduleStatusWorker();
+      return new Response(JSON.stringify(schedule), {
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
+      });
+    }
+
     // 2. Meta Verification Challenge Handshake (GET /webhook)
     if (request.method === "GET" && (url.pathname === "/webhook" || url.pathname === "/webhook/whatsapp")) {
       const mode = url.searchParams.get("hub.mode");
@@ -168,4 +176,49 @@ async function sendWhatsAppMessage(recipientPhone, messageText, env) {
   } catch (e) {
     console.error("[WhatsApp Send Error]", e.message);
   }
+}
+
+function getOPDScheduleStatusWorker(now = new Date()) {
+  const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
+  const istNow = new Date(utcMs + 5.5 * 3600000);
+  const day = istNow.getDay();
+  const hourDecimal = istNow.getHours() + istNow.getMinutes() / 60 + istNow.getSeconds() / 3600;
+
+  const isMonToSat = day >= 1 && day <= 6;
+  let activeWindow = null;
+  if (isMonToSat) {
+    if (hourDecimal >= 10.5 && hourDecimal < 13.5) activeWindow = { label: "Morning OPD Window", end: 13.5 };
+    else if (hourDecimal >= 17.0 && hourDecimal < 20.5) activeWindow = { label: "Evening OPD Window", end: 20.5 };
+  }
+
+  const formatCountdown = (ms) => {
+    const s = Math.floor(ms / 1000);
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    if (h > 0) return `${h}h ${m}m`;
+    return `${m}m ${s % 60}s`;
+  };
+
+  if (activeWindow) {
+    const intervalMs = 21 * 60 * 1000;
+    const nextTargetMs = Date.now() + intervalMs;
+    const targetIST = new Date(nextTargetMs + 5.5 * 3600000);
+    let h = targetIST.getHours() % 12 || 12;
+    const ampm = targetIST.getHours() >= 12 ? "PM" : "AM";
+    const mStr = targetIST.getMinutes() < 10 ? "0" + targetIST.getMinutes() : targetIST.getMinutes();
+    return {
+      windowOpen: true,
+      windowLabel: activeWindow.label,
+      displayText: `Next OPD: ${h}:${mStr} ${ampm} (In ${formatCountdown(intervalMs)})`,
+      secondsUntilNext: Math.round(intervalMs / 1000)
+    };
+  }
+
+  let nextLabel = hourDecimal < 10.5 ? "10:30 AM" : (hourDecimal < 17.0 ? "5:00 PM" : (day === 6 ? "Mon 10:30 AM" : "Tomorrow 10:30 AM"));
+  return {
+    windowOpen: false,
+    windowLabel: "Outside OPD Window",
+    displayText: `Outside OPD Window | Next Window: ${nextLabel}`,
+    secondsUntilNext: 0
+  };
 }

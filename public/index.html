@@ -2552,11 +2552,80 @@ Once submitted, your sector is locked exclusively.`;
     }
 
     // =========================================================================
-    // 1. UNIFIED HYBRID DISPATCHER & AUTO-SCHEDULER TICKER
+    // 1. UNIFIED HYBRID DISPATCHER & REAL-TIME OPD AUTO-SCHEDULER ENGINE
     // =========================================================================
     let schedulerActive = true;
     let schedulerNextTargetIndex = 2; // Dr. Suman Singh
-    let schedulerSecondsRemaining = 24 * 60; // 24 minutes
+    let schedulerTargetTimestamp = null; // Exact epoch ms of next batch
+    let schedulerCurrentJitter = 6; // Jitter in minutes (±6m)
+
+    function getISTDate(date = new Date()) {
+      const utcMs = date.getTime() + date.getTimezoneOffset() * 60000;
+      return new Date(utcMs + 5.5 * 3600000);
+    }
+
+    function formatTime12hIST(date) {
+      const ist = getISTDate(date);
+      let h = ist.getHours();
+      const m = ist.getMinutes();
+      const ampm = h >= 12 ? "PM" : "AM";
+      h = h % 12 || 12;
+      const mStr = m < 10 ? "0" + m : m;
+      return `${h}:${mStr} ${ampm}`;
+    }
+
+    function formatCountdown(ms) {
+      if (ms <= 0) return "0s";
+      const totalSecs = Math.floor(ms / 1000);
+      const hours = Math.floor(totalSecs / 3600);
+      const mins = Math.floor((totalSecs % 3600) / 60);
+      const secs = totalSecs % 60;
+      if (hours > 0) {
+        return `${hours}h ${mins}m`;
+      }
+      return `${mins}m ${secs < 10 ? "0" : ""}${secs}s`;
+    }
+
+    function getNextUncontactedLeadRank() {
+      const uncontacted = leads.find(l => !l.status || l.status === "Not Contacted");
+      if (uncontacted) return uncontacted.rank;
+      return (schedulerNextTargetIndex % 20) + 1;
+    }
+
+    function executeAutoSchedulerDispatch() {
+      const targetLead = leads.find(l => l.rank === schedulerNextTargetIndex) || leads.find(l => !l.status || l.status === "Not Contacted") || leads[0];
+      if (!targetLead) return;
+
+      const todayCount = getTodayApproachedCount();
+      if (todayCount >= DAILY_APPROACH_LIMIT) {
+        logDashboardActivity(
+          "ANTI_BAN_GUARD",
+          `🛡️ Anti-Ban Quota Shield: 20/20 limit reached for today. Auto-scheduler held until next morning 10:30 AM.`
+        );
+        return;
+      }
+
+      // Execute auto dispatch
+      targetLead.status = "WhatsApp Sent";
+      targetLead.last_contacted_at = new Date().toISOString();
+      saveState(targetLead);
+      incrementTodayApproachedCount();
+      renderLeads();
+      updateKPIs();
+
+      if (typeof playFunnelAudioAlert === "function") {
+        playFunnelAudioAlert("DISPATCH");
+      }
+
+      logDashboardActivity(
+        "AUTO_DISPATCH",
+        `⚡ Auto-Scheduler Dispatched Touch #1 outreach to #${targetLead.rank} ${targetLead.recipient} (${targetLead.business_name})`,
+        targetLead.rank
+      );
+
+      // Advance to next lead in queue
+      schedulerNextTargetIndex = getNextUncontactedLeadRank();
+    }
 
     function updateSchedulerTicker() {
       const badge = document.getElementById("scheduler-badge");
@@ -2581,30 +2650,122 @@ Once submitted, your sector is locked exclusively.`;
         return;
       }
 
-      badge.className = "px-2 py-0.5 rounded-md font-extrabold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 uppercase tracking-wider flex items-center gap-1.5";
-      badge.innerHTML = `<span>🕒 Auto-Scheduler: ACTIVE</span><span id="scheduler-pulse" class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>`;
+      // 1. Compute true wall-clock time in IST
+      const nowMs = Date.now();
+      const istNow = getISTDate(new Date(nowMs));
+      const day = istNow.getDay(); // 0 = Sun, 1..6 = Mon..Sat
+      const hourDecimal = istNow.getHours() + istNow.getMinutes() / 60 + istNow.getSeconds() / 3600;
+
+      const isMonToSat = day >= 1 && day <= 6;
+      const MORNING_START = 10.5; // 10:30 AM
+      const MORNING_END = 13.5;   // 01:30 PM
+      const EVENING_START = 17.0; // 05:00 PM
+      const EVENING_END = 20.5;   // 08:30 PM
+
+      let isInsideWindow = false;
+      let windowEndDecimal = 0;
+
+      if (isMonToSat) {
+        if (hourDecimal >= MORNING_START && hourDecimal < MORNING_END) {
+          isInsideWindow = true;
+          windowEndDecimal = MORNING_END;
+        } else if (hourDecimal >= EVENING_START && hourDecimal < EVENING_END) {
+          isInsideWindow = true;
+          windowEndDecimal = EVENING_END;
+        }
+      }
+
+      // 2. Handle Inside Window
+      if (isInsideWindow) {
+        badge.className = "px-2 py-0.5 rounded-md font-extrabold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 uppercase tracking-wider flex items-center gap-1.5";
+        badge.innerHTML = `<span>🕒 Auto-Scheduler: ACTIVE</span><span id="scheduler-pulse" class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>`;
+        if (toggleBtn) {
+          toggleBtn.innerHTML = `<span>⏸ Pause</span>`;
+          toggleBtn.className = "px-2.5 py-1 rounded-md text-xs font-bold border border-cyan-500/40 bg-cyan-500/15 text-cyan-300 hover:bg-cyan-500/25 transition flex items-center gap-1 shrink-0";
+        }
+
+        // Check if countdown reached 0 or target timestamp is in the past
+        if (!schedulerTargetTimestamp || nowMs >= schedulerTargetTimestamp) {
+          if (schedulerTargetTimestamp) {
+            // Countdown hit 0: fire dispatch
+            executeAutoSchedulerDispatch();
+          }
+          // Calculate next randomized jitter interval (15 to 25 minutes, ±6m)
+          schedulerCurrentJitter = 4 + Math.floor(Math.random() * 6); // 4m - 9m
+          const intervalMs = (15 + schedulerCurrentJitter) * 60 * 1000;
+          schedulerTargetTimestamp = nowMs + intervalMs;
+        }
+
+        // Check if target pushes beyond current active window
+        const targetIST = getISTDate(new Date(schedulerTargetTimestamp));
+        const targetHourDecimal = targetIST.getHours() + targetIST.getMinutes() / 60 + targetIST.getSeconds() / 3600;
+
+        if (targetHourDecimal >= windowEndDecimal || targetIST.getDate() !== istNow.getDate()) {
+          if (windowEndDecimal === MORNING_END) {
+            const nextW = new Date(nowMs);
+            nextW.setHours(17, 0, 0, 0);
+            schedulerTargetTimestamp = nextW.getTime();
+          } else {
+            const daysToAdd = day === 6 ? 2 : 1;
+            const nextW = new Date(nowMs);
+            nextW.setDate(nextW.getDate() + daysToAdd);
+            nextW.setHours(10, 30, 0, 0);
+            schedulerTargetTimestamp = nextW.getTime();
+          }
+        }
+
+        const remainingMs = Math.max(0, schedulerTargetTimestamp - nowMs);
+        const targetDate = new Date(schedulerTargetTimestamp);
+        const formattedTargetTime = formatTime12hIST(targetDate);
+        const countdownStr = formatCountdown(remainingMs);
+
+        nextBatch.textContent = `${formattedTargetTime} (In ${countdownStr})`;
+        nextBatch.className = "font-mono font-bold text-cyan-300";
+
+        const targetLead = leads.find(l => l.rank === schedulerNextTargetIndex) || leads[1] || leads[0];
+        if (nextTarget && targetLead) {
+          nextTarget.textContent = `#${targetLead.rank} ${targetLead.recipient}`;
+        }
+        if (jitter) jitter.textContent = `±${schedulerCurrentJitter}m`;
+        return;
+      }
+
+      // 3. Handle Outside Window
+      badge.className = "px-2 py-0.5 rounded-md font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/40 uppercase tracking-wider flex items-center gap-1.5";
+      badge.innerHTML = `<span>🌙 Auto-Scheduler: STANDBY</span>`;
       if (toggleBtn) {
         toggleBtn.innerHTML = `<span>⏸ Pause</span>`;
         toggleBtn.className = "px-2.5 py-1 rounded-md text-xs font-bold border border-cyan-500/40 bg-cyan-500/15 text-cyan-300 hover:bg-cyan-500/25 transition flex items-center gap-1 shrink-0";
       }
 
-      if (schedulerSecondsRemaining > 0) {
-        schedulerSecondsRemaining--;
+      let nextWindowDate = new Date(nowMs);
+      let nextWindowTimeLabel = "";
+
+      if (isMonToSat && hourDecimal < MORNING_START) {
+        nextWindowDate.setHours(10, 30, 0, 0);
+        nextWindowTimeLabel = "10:30 AM";
+      } else if (isMonToSat && hourDecimal >= MORNING_END && hourDecimal < EVENING_START) {
+        nextWindowDate.setHours(17, 0, 0, 0);
+        nextWindowTimeLabel = "5:00 PM";
       } else {
-        schedulerSecondsRemaining = (18 + Math.floor(Math.random() * 12)) * 60;
-        schedulerNextTargetIndex = (schedulerNextTargetIndex % 20) + 1;
+        const daysToAdd = day === 6 ? 2 : 1;
+        nextWindowDate.setDate(nextWindowDate.getDate() + daysToAdd);
+        nextWindowDate.setHours(10, 30, 0, 0);
+        nextWindowTimeLabel = daysToAdd === 2 ? "Mon 10:30 AM" : "Tomorrow 10:30 AM";
       }
 
-      const mins = Math.floor(schedulerSecondsRemaining / 60);
-      const secs = schedulerSecondsRemaining % 60;
-      nextBatch.textContent = `11:30 AM (In ${mins}m ${secs < 10 ? '0' : ''}${secs}s)`;
-      nextBatch.className = "font-mono font-bold text-cyan-300";
+      schedulerTargetTimestamp = nextWindowDate.getTime();
+      const remainingMs = Math.max(0, schedulerTargetTimestamp - nowMs);
+      const countdownStr = formatCountdown(remainingMs);
+
+      nextBatch.textContent = `Outside OPD Window | Next Window: ${nextWindowTimeLabel} (In ${countdownStr})`;
+      nextBatch.className = "font-mono font-bold text-amber-300";
 
       const targetLead = leads.find(l => l.rank === schedulerNextTargetIndex) || leads[1] || leads[0];
       if (nextTarget && targetLead) {
-        nextTarget.textContent = `#${targetLead.rank} ${targetLead.recipient}`;
+        nextTarget.textContent = `#${targetLead.rank} ${targetLead.recipient} (Queued)`;
       }
-      if (jitter) jitter.textContent = "±6m";
+      if (jitter) jitter.textContent = `±${schedulerCurrentJitter}m`;
     }
 
     function toggleAutoScheduler() {
