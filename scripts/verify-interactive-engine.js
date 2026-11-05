@@ -5,7 +5,8 @@ const {
   sanitizeClinicName, 
   sanitizeDoctorName, 
   buildHighContextColdMessage, 
-  buildInteractiveOutreachPayload 
+  buildInteractiveOutreachPayload,
+  buildStep2DemoMenuPayload
 } = require('../automation/autonomous-funnel-engine');
 
 async function runVerification() {
@@ -76,7 +77,21 @@ async function runVerification() {
   if (buttons[1].reply.id !== "BTN_OPT_OUT") {
     throw new Error(`Button 2 ID must be BTN_OPT_OUT, got ${buttons[1].reply.id}`);
   }
-  console.log("✅ Interactive Template Payload Structure Passed.");
+  console.log("✅ Step 1 Interactive Template Payload Structure Passed.");
+
+  // Test 4: Step 2 Interactive Demo Menu Structure (3 Buttons)
+  const step2Payload = buildStep2DemoMenuPayload("916209228845");
+  console.log("\n[Test 4: Step 2 Interactive Demo Menu (3 Buttons)]");
+  console.log(JSON.stringify(step2Payload, null, 2));
+
+  const step2Buttons = step2Payload.interactive.action.buttons;
+  if (step2Buttons.length !== 3) {
+    throw new Error(`Expected 3 demo menu buttons, got ${step2Buttons.length}`);
+  }
+  if (step2Buttons[0].reply.id !== "BTN_BOOK_OPD" || step2Buttons[1].reply.id !== "BTN_REVIEW_SHIELD" || step2Buttons[2].reply.id !== "BTN_LOCK_OFFER") {
+    throw new Error("Step 2 demo buttons mismatched!");
+  }
+  console.log("✅ Step 2 Interactive Demo Menu Structure Passed.");
 
   console.log("\n============================================================");
   console.log("ALL VERIFICATION SUITES PASSED SUCCESSFULLY!");

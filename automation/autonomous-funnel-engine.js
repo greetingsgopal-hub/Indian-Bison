@@ -73,8 +73,12 @@ function buildHighContextColdMessage(lead) {
  */
 function buildInteractiveOutreachPayload(lead, customOptions = {}) {
   const cleanPhone = String(lead.phone_whatsapp || "").replace(/[^0-9]/g, "");
-  const bodyText = customOptions.bodyText || buildHighContextColdMessage(lead);
-  const headerImageUrl = customOptions.headerImageUrl || "https://indian-bison-crm-2026.web.app/icon.svg";
+  const docName = sanitizeDoctorName(lead.recipient);
+  const clinicName = sanitizeClinicName(lead.business_name);
+  const sector = (lead.locality || lead.address || "Sector Alpha-1, Greater Noida").split(",")[0].trim();
+  const defaultBody = `Hey ${docName}, noticed patients searching ${clinicName} in ${sector} see unconfirmed evening OPD timings.\n\nWe pre-built a 24/7 WhatsApp booking slot & 5★ review shield for your clinic.\n\nWant to see how it works?`;
+  const bodyText = customOptions.bodyText || defaultBody;
+  const headerImageUrl = customOptions.headerImageUrl || "https://indian-bison-crm-2026.web.app/assets/audit-preview-card.png";
 
   return {
     messaging_product: "whatsapp",
@@ -92,13 +96,16 @@ function buildInteractiveOutreachPayload(lead, customOptions = {}) {
       body: {
         text: bodyText
       },
+      footer: {
+        text: "Indian Bison • Automated Clinic Systems"
+      },
       action: {
         buttons: [
           {
             type: "reply",
             reply: {
               id: "BTN_VIEW_PROTOTYPE",
-              title: "📱 View Prototype"
+              title: "📱 View 30s Prototype"
             }
           },
           {
@@ -106,6 +113,53 @@ function buildInteractiveOutreachPayload(lead, customOptions = {}) {
             reply: {
               id: "BTN_OPT_OUT",
               title: "🛑 Opt Out"
+            }
+          }
+        ]
+      }
+    }
+  };
+}
+
+/**
+ * Step 2: Instant Automated Interactive Triage Menu
+ */
+function buildStep2DemoMenuPayload(phone) {
+  const cleanPhone = String(phone || "").replace(/[^0-9]/g, "");
+  return {
+    messaging_product: "whatsapp",
+    recipient_type: "individual",
+    to: cleanPhone,
+    type: "interactive",
+    interactive: {
+      type: "button",
+      body: {
+        text: "Here is the live patient experience:\nWhat would you like to test first?"
+      },
+      footer: {
+        text: "Indian Bison • Automated Clinic Systems"
+      },
+      action: {
+        buttons: [
+          {
+            type: "reply",
+            reply: {
+              id: "BTN_BOOK_OPD",
+              title: "🦷 Book OPD Slot"
+            }
+          },
+          {
+            type: "reply",
+            reply: {
+              id: "BTN_REVIEW_SHIELD",
+              title: "⭐ 5★ Review Shield"
+            }
+          },
+          {
+            type: "reply",
+            reply: {
+              id: "BTN_LOCK_OFFER",
+              title: "💳 Lock ₹2,999 Offer"
             }
           }
         ]
@@ -661,6 +715,7 @@ module.exports = {
   buildPolymorphicColdMessage,
   buildHighContextColdMessage,
   buildInteractiveOutreachPayload,
+  buildStep2DemoMenuPayload,
   buildInstantPrototypeAndDepositReply,
   buildCallSlotRequestReply,
   getCallSlotOptionsIST,

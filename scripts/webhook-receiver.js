@@ -22,7 +22,8 @@ const {
   CONFIG,
   dispatchSingleLeadManual,
   sendMetaCloudWhatsApp,
-  getScheduleStatus
+  getScheduleStatus,
+  buildStep2DemoMenuPayload
 } = require("../automation/autonomous-funnel-engine");
 
 const {
@@ -213,7 +214,7 @@ async function handleInboundWebhook(req, res) {
 
         const isPositiveSignal = 
           buttonReplyId === "BTN_VIEW_PROTOTYPE" || 
-          /\b(view\s*prototype|prototype|haan|sure)\b/i.test(buttonReplyTitle) || 
+          /\b(view\s*(?:30s\s*)?prototype|prototype|haan|sure)\b/i.test(buttonReplyTitle) || 
           /\byes\b/i.test(textBody);
 
         const isOptOutSignal = 
@@ -221,33 +222,40 @@ async function handleInboundWebhook(req, res) {
           /\b(opt\s*out|stop|unsubscribe)\b/i.test(buttonReplyTitle) || 
           /\bstop\b/i.test(textBody);
 
-        // CASE A: Doctor taps "View Prototype" button or replies "YES"
+        const isBookOpdSignal = 
+          buttonReplyId === "BTN_BOOK_OPD" ||
+          /book\s*opd/i.test(buttonReplyTitle) ||
+          /\b(opd|book|slot|1)\b/i.test(textBody);
+
+        const isReviewShieldSignal = 
+          buttonReplyId === "BTN_REVIEW_SHIELD" ||
+          /review\s*shield/i.test(buttonReplyTitle) ||
+          /\b(review|shield|2)\b/i.test(textBody);
+
+        const isLockOfferSignal = 
+          buttonReplyId === "BTN_LOCK_OFFER" ||
+          /lock.*offer/i.test(buttonReplyTitle) ||
+          /\b(lock|offer|founder|2999|3)\b/i.test(textBody);
+
+        // ───────────────────────────────────────────────────────────────────
+        // CASE A: Step 2 Interactive Demo Menu (Doctor taps "View Prototype" / "YES")
+        // ───────────────────────────────────────────────────────────────────
         if (isPositiveSignal) {
-          console.log(`[Meta Webhook] Doctor positive signal (${buttonReplyId || "YES"}) from ${fromPhone} (Lead #${lead.rank})`);
+          console.log(`[Meta Webhook] Step 2 Trigger (${buttonReplyId || "YES"}) from ${fromPhone} (Lead #${lead.rank})`);
 
-          // 1. Generate live ₹2,999 Razorpay slot-lock order (amount: 299900 INR)
-          const razorpayOrder = await createRazorpaySlotLockOrder(lead);
-
-          const previewUrl = `https://indian-bison-crm-2026.web.app/preview.html?rank=${lead.rank}&slot_lock=2999&order_id=${razorpayOrder.id}`;
-          const balance = Math.max(0, (lead.setup_fee_inr || 18500) - 2999);
-          const sectorShort = (lead.locality || "Greater Noida").split(",")[0];
-
-          const automatedReply = `Hi ${lead.recipient}, here is your customized 30-sec live prototype for ${lead.business_name} (${sectorShort}):\n\n🔗 ${previewUrl}\n\n*Zero-Risk Slot-Lock Terms:*\n• Total Setup: ₹${(lead.setup_fee_inr || 18500).toLocaleString("en-IN")} (${lead.package_name})\n• *Lock Your Sector Slot Today:* Just *₹2,999/- Slot-Lock Deposit* via Razorpay UPI/Card directly on the preview link.\n• *Balance (₹${balance.toLocaleString("en-IN")}):* Payable ONLY after your live system is delivered in 5 days.\n\nTap the link above to test the 05:30 PM OPD slot booking and lock your sector!`;
-
-          // 2. Dispatch automated response via Meta Cloud API
-          const sendRes = await sendMetaCloudWhatsApp(fromPhone, automatedReply, true);
+          // Deliver Meta Cloud API Interactive Button Menu
+          const menuPayload = buildStep2DemoMenuPayload(fromPhone);
+          const sendRes = await sendMetaCloudWhatsApp(fromPhone, menuPayload, true);
 
           await updateLeadRecord(lead.rank, {
             status: "Prototype Sent",
             doctor_replied: true,
             doctor_reply_text: buttonReplyTitle || textBody || "BTN_VIEW_PROTOTYPE",
-            doctor_replied_at: new Date().toISOString(),
-            slot_lock_url: previewUrl,
-            razorpay_order_id: razorpayOrder.id
+            doctor_replied_at: new Date().toISOString()
           });
 
           await appendFunnelEvent({
-            event_type: "DOCTOR_REPLIED_YES",
+            event_type: "DOCTOR_REPLIED_VIEW_PROTOTYPE",
             lead_rank: lead.rank,
             lead_id: `lead_${lead.rank}`,
             business_name: lead.business_name,
@@ -255,11 +263,68 @@ async function handleInboundWebhook(req, res) {
             status: "Prototype Sent",
             wamid: sendRes?.wamid || msg.id,
             actor: "DoctorInbound",
-            payload_summary: `Doctor clicked "${buttonReplyTitle || 'YES'}"! Razorpay order ${razorpayOrder.id} (₹2,999) created. Automated slot-lock sent via Meta API.`,
-            raw_payload: { inbound: msg, outbound: sendRes, previewUrl, razorpayOrder }
+            payload_summary: `Doctor clicked "${buttonReplyTitle || 'View Prototype'}". Step 2 Interactive Demo Menu delivered via Meta Cloud API.`,
+            raw_payload: { inbound: msg, outbound: sendRes }
           });
 
-        // CASE B: Doctor taps "Opt Out" button or replies "STOP" (Compliance)
+        // ───────────────────────────────────────────────────────────────────
+        // CASE B: Step 3a Book OPD Slot Simulation
+        // ───────────────────────────────────────────────────────────────────
+        } else if (isBookOpdSignal) {
+          console.log(`[Meta Webhook] Step 3a OPD Simulation triggered from ${fromPhone}`);
+          const razorpayOrder = await createRazorpaySlotLockOrder(lead);
+          const previewUrl = `https://indian-bison-crm-2026.web.app/preview.html?rank=${lead.rank}&slot_lock=2999&order_id=${razorpayOrder.id}`;
+          const opdMessage = 
+            `*🦷 Indian Bison • 24/7 OPD Slot Booking Simulation*\n\n` +
+            `*1. Patient Inquiry (11:45 PM):*\n"Need evening RCT appointment tomorrow at ${lead.business_name}"\n\n` +
+            `*2. Indian Bison AI Bot (Instant Reply):*\n"Dr. ${lead.recipient} has 2 slots open tomorrow:\n• 02:30 PM (Post-Morning OPD)\n• 06:30 PM (Evening OPD)\nTap a time to reserve instantly."\n\n` +
+            `*3. Result:*\nPatient tapped 06:30 PM → OPD calendar updated, zero drop-off, ₹0 staff cost.\n\n` +
+            `Lock this 24/7 booking engine for your sector:\n` +
+            `👉 ${previewUrl} (₹2,999 Slot-Lock Deposit)\n\n` +
+            `Our team deploys your live bot in 5 business days.`;
+
+          await sendMetaCloudWhatsApp(fromPhone, opdMessage, true);
+
+        // ───────────────────────────────────────────────────────────────────
+        // CASE C: Step 3b 5-Star Review Shield Simulation
+        // ───────────────────────────────────────────────────────────────────
+        } else if (isReviewShieldSignal) {
+          console.log(`[Meta Webhook] Step 3b Review Shield Simulation triggered from ${fromPhone}`);
+          const razorpayOrder = await createRazorpaySlotLockOrder(lead);
+          const previewUrl = `https://indian-bison-crm-2026.web.app/preview.html?rank=${lead.rank}&slot_lock=2999&order_id=${razorpayOrder.id}`;
+          const reviewMessage = 
+            `*⭐ Indian Bison • 5-Star Review Shield Simulation*\n\n` +
+            `*How it shields ${lead.business_name}:*\n\n` +
+            `1️⃣ Patients scan a branded QR standee at your clinic front desk.\n` +
+            `2️⃣ Delighted patients (4–5★) are directed straight to your Google Maps listing to leave public 5★ reviews.\n` +
+            `3️⃣ Dissatisfied patients (1–3★) are intercepted into a private WhatsApp chat with you so you resolve grievances privately.\n\n` +
+            `🛡️ *Outcome: 4.8+ Rating locked, negative review damage eliminated.*\n\n` +
+            `Lock your clinic's sector shield:\n` +
+            `👉 ${previewUrl} (₹2,999 Slot-Lock Deposit)`;
+
+          await sendMetaCloudWhatsApp(fromPhone, reviewMessage, true);
+
+        // ───────────────────────────────────────────────────────────────────
+        // CASE D: Step 3c Slot-Lock Payment Trigger
+        // ───────────────────────────────────────────────────────────────────
+        } else if (isLockOfferSignal) {
+          console.log(`[Meta Webhook] Step 3c Payment Trigger from ${fromPhone}`);
+          const razorpayOrder = await createRazorpaySlotLockOrder(lead);
+          const lockUrl = `https://indian-bison-crm-2026.web.app/preview.html?rank=${lead.rank}&slot_lock=2999&order_id=${razorpayOrder.id}&auto_open=true`;
+          const founderMessage = 
+            `Great choice, Dr. ${lead.recipient}.\n\n` +
+            `Lock your sector exclusivity in ${(lead.locality || "Sector Alpha-1").split(",")[0]} here:\n` +
+            `👉 ${lockUrl} (₹2,999)\n\n` +
+            `• Setup Package: ₹${(lead.setup_fee_inr || 18500).toLocaleString("en-IN")}\n` +
+            `• 100% Refundable Slot-Lock Deposit: ₹2,999 (Today)\n` +
+            `• Balance: Payable ONLY on live delivery in 5 business days!\n\n` +
+            `Our team deploys your live bot in 5 business days.`;
+
+          await sendMetaCloudWhatsApp(fromPhone, founderMessage, true);
+
+        // ───────────────────────────────────────────────────────────────────
+        // CASE E: Doctor taps "Opt Out" button or replies "STOP" (Compliance)
+        // ───────────────────────────────────────────────────────────────────
         } else if (isOptOutSignal) {
           console.log(`[Meta Webhook] Doctor opted out (${buttonReplyId || "STOP"}) from ${fromPhone} (Lead #${lead.rank})`);
 

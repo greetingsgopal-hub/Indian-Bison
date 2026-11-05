@@ -65,11 +65,14 @@ export default {
               header: {
                 type: "image",
                 image: {
-                  link: headerImageUrl || "https://indian-bison-crm-2026.web.app/icon.svg"
+                  link: headerImageUrl || "https://indian-bison-crm-2026.web.app/assets/audit-preview-card.png"
                 }
               },
               body: {
-                text: messageText || `Hey ${recipient || 'Doctor'}, noticed patients searching ${businessName || 'your clinic'} find unconfirmed evening OPD timings. Built a 30-sec WhatsApp booking slot prototype. Want me to drop the preview link?\n(Reply STOP to opt out)`
+                text: messageText || `Hey ${recipient || 'Doctor'}, noticed patients searching ${businessName || 'your clinic'} in Sector Alpha-1 see unconfirmed evening OPD timings.\n\nWe pre-built a 24/7 WhatsApp booking slot & 5★ review shield for your clinic.\n\nWant to see how it works?`
+              },
+              footer: {
+                text: "Indian Bison • Automated Clinic Systems"
               },
               action: {
                 buttons: [
@@ -77,7 +80,7 @@ export default {
                     type: "reply",
                     reply: {
                       id: "BTN_VIEW_PROTOTYPE",
-                      title: "📱 View Prototype"
+                      title: "📱 View 30s Prototype"
                     }
                   },
                   {
@@ -203,38 +206,138 @@ async function handleMetaWebhook(payload, env) {
 
       console.log(`[Meta Inbound] From ${from}: text="${text}", buttonId="${buttonId}", buttonTitle="${buttonTitle}"`);
 
-      const isPositiveSignal = 
+      const isViewPrototypeTrigger = 
         buttonId === "BTN_VIEW_PROTOTYPE" ||
-        /view\s*prototype/i.test(buttonTitle) ||
-        upperText === "YES" || upperText.includes("YES") || upperText.includes("HAAN") || upperText.includes("SURE");
+        /view\s*(?:30s\s*)?prototype/i.test(buttonTitle) ||
+        upperText === "YES" || upperText === "DEMO" || upperText.includes("SEE") || upperText.includes("HAAN") || upperText.includes("SURE");
 
-      const isOptOutSignal = 
+      const isOptOutTrigger = 
         buttonId === "BTN_OPT_OUT" ||
         /opt\s*out/i.test(buttonTitle) ||
         upperText === "STOP" || upperText.includes("UNSUBSCRIBE");
 
-      // Case 1: Doctor clicked "View Prototype" button or replied "YES"
-      if (isPositiveSignal) {
-        console.log(`[Trigger] Positive signal (${buttonId || 'YES'}) from ${from}. Generating ₹2,999 Slot-Lock order...`);
+      const isBookOpdTrigger = 
+        buttonId === "BTN_BOOK_OPD" ||
+        /book\s*opd/i.test(buttonTitle) ||
+        upperText.includes("OPD") || upperText.includes("BOOK") || upperText === "1";
 
-        // Generate Razorpay Order
-        const orderId = await createRazorpayOrder(env);
-        const previewUrl = `https://indian-bison-crm-2026.web.app/preview.html?phone=${from}&slot_lock=2999&order_id=${orderId}`;
+      const isReviewShieldTrigger = 
+        buttonId === "BTN_REVIEW_SHIELD" ||
+        /review\s*shield/i.test(buttonTitle) ||
+        upperText.includes("REVIEW") || upperText.includes("SHIELD") || upperText === "2";
 
-        // Send WhatsApp reply to Doctor
-        const replyMessage = 
-          `*Indian Bison — Greater Noida Clinic Growth*\n\n` +
-          `Thank you, Doctor. We have reserved your clinic's slot.\n\n` +
-          `📱 *Interactive Prototype & Live GBP Audit:*\n${previewUrl}\n\n` +
-          `🔒 *Deposit Amount:* ₹2,999 (100% refundable slot-lock before prototype review).\n` +
-          `Order ID: ${orderId}\n\n` +
-          `Reply *STOP* at any time to opt-out.`;
+      const isLockOfferTrigger = 
+        buttonId === "BTN_LOCK_OFFER" ||
+        /lock.*offer/i.test(buttonTitle) ||
+        upperText.includes("LOCK") || upperText.includes("FOUNDER") || upperText.includes("2999") || upperText === "3";
 
-        await sendWhatsAppMessage(from, replyMessage, env);
-        console.log(`[Dispatched] Slot-Lock response sent to ${from}`);
+      // ───────────────────────────────────────────────────────────────────────
+      // Step 2: Instant Automated Interactive Triage Menu
+      // ───────────────────────────────────────────────────────────────────────
+      if (isViewPrototypeTrigger) {
+        console.log(`[Step 2 Triage] Doctor tapped View Prototype (${buttonId || 'YES'}) from ${from}. Dispatching Interactive Demo Menu...`);
+        const demoMenuPayload = {
+          messaging_product: "whatsapp",
+          recipient_type: "individual",
+          to: from,
+          type: "interactive",
+          interactive: {
+            type: "button",
+            body: {
+              text: "Here is the live patient experience:\nWhat would you like to test first?"
+            },
+            footer: {
+              text: "Indian Bison • Automated Clinic Systems"
+            },
+            action: {
+              buttons: [
+                {
+                  type: "reply",
+                  reply: {
+                    id: "BTN_BOOK_OPD",
+                    title: "🦷 Book OPD Slot"
+                  }
+                },
+                {
+                  type: "reply",
+                  reply: {
+                    id: "BTN_REVIEW_SHIELD",
+                    title: "⭐ 5★ Review Shield"
+                  }
+                },
+                {
+                  type: "reply",
+                  reply: {
+                    id: "BTN_LOCK_OFFER",
+                    title: "💳 Lock ₹2,999 Offer"
+                  }
+                }
+              ]
+            }
+          }
+        };
+
+        await sendWhatsAppMessage(from, demoMenuPayload, env);
       }
-      // Case 2: Doctor clicked "Opt Out" button or replied "STOP" (Compliance)
-      else if (isOptOutSignal) {
+      // ───────────────────────────────────────────────────────────────────────
+      // Step 3a: OPD Slot Booking Live Simulation
+      // ───────────────────────────────────────────────────────────────────────
+      else if (isBookOpdTrigger) {
+        console.log(`[Step 3 Triage] Doctor selected Book OPD Slot from ${from}`);
+        const orderId = await createRazorpayOrder(env);
+        const lockUrl = `https://indian-bison-crm-2026.web.app/preview.html?phone=${from}&slot_lock=2999&order_id=${orderId}`;
+        const opdMessage = 
+          `*🦷 Indian Bison • 24/7 OPD Slot Booking Simulation*\n\n` +
+          `*1. Patient Inquiry (11:45 PM):*\n"Need evening RCT appointment tomorrow at Apex Dental"\n\n` +
+          `*2. Indian Bison AI Bot (Instant Reply):*\n"Dr. Gopal has 2 slots open tomorrow:\n• 02:30 PM (Post-Morning OPD)\n• 06:30 PM (Evening OPD)\nTap a time to reserve instantly."\n\n` +
+          `*3. Result:*\nPatient tapped 06:30 PM → OPD calendar updated, zero drop-off, ₹0 staff cost.\n\n` +
+          `Lock this 24/7 booking engine for your sector:\n` +
+          `👉 ${lockUrl} (₹2,999 Slot-Lock Deposit)\n\n` +
+          `Our team deploys your live bot in 5 business days.`;
+
+        await sendWhatsAppMessage(from, opdMessage, env);
+      }
+      // ───────────────────────────────────────────────────────────────────────
+      // Step 3b: 5★ Google Review Shield Simulation
+      // ───────────────────────────────────────────────────────────────────────
+      else if (isReviewShieldTrigger) {
+        console.log(`[Step 3 Triage] Doctor selected 5★ Review Shield from ${from}`);
+        const orderId = await createRazorpayOrder(env);
+        const lockUrl = `https://indian-bison-crm-2026.web.app/preview.html?phone=${from}&slot_lock=2999&order_id=${orderId}`;
+        const reviewMessage = 
+          `*⭐ Indian Bison • 5-Star Review Shield Simulation*\n\n` +
+          `*How it shields your clinic rating:*\n\n` +
+          `1️⃣ Patients scan a branded QR standee at your clinic front desk.\n` +
+          `2️⃣ Delighted patients (4–5★) are directed straight to your Google Maps listing to leave public 5★ reviews.\n` +
+          `3️⃣ Dissatisfied patients (1–3★) are intercepted into a private WhatsApp chat with you so you resolve grievances privately.\n\n` +
+          `🛡️ *Outcome: 4.8+ Rating locked, negative review damage eliminated.*\n\n` +
+          `Lock your clinic's sector shield:\n` +
+          `👉 ${lockUrl} (₹2,999 Slot-Lock Deposit)`;
+
+        await sendWhatsAppMessage(from, reviewMessage, env);
+      }
+      // ───────────────────────────────────────────────────────────────────────
+      // Step 3c: Slot-Lock Payment Trigger
+      // ───────────────────────────────────────────────────────────────────────
+      else if (isLockOfferTrigger) {
+        console.log(`[Step 3 Payment] Doctor selected Lock Offer from ${from}`);
+        const orderId = await createRazorpayOrder(env);
+        const lockUrl = `https://indian-bison-crm-2026.web.app/preview.html?phone=${from}&slot_lock=2999&order_id=${orderId}&auto_open=true`;
+        const founderMessage = 
+          `Great choice, Doctor.\n\n` +
+          `Lock your sector exclusivity in Sector Alpha-1 here:\n` +
+          `👉 ${lockUrl} (₹2,999)\n\n` +
+          `• Setup Package: ₹18,500\n` +
+          `• 100% Refundable Slot-Lock Deposit: ₹2,999 (Today)\n` +
+          `• Balance (₹15,501): Payable ONLY on live delivery in 5 business days!\n\n` +
+          `Our team deploys your live bot in 5 business days.`;
+
+        await sendWhatsAppMessage(from, founderMessage, env);
+      }
+      // ───────────────────────────────────────────────────────────────────────
+      // Compliance: Opt-Out / Stop
+      // ───────────────────────────────────────────────────────────────────────
+      else if (isOptOutTrigger) {
         console.log(`[Compliance] "STOP" received from ${from}. Marking suppressed.`);
         await sendWhatsAppMessage(from, "You have been successfully opted out. No further automated messages will be sent.", env);
       }
