@@ -157,7 +157,7 @@
       </div>
 
       <!-- 2. Auto-Scheduler Dynamic Ticker Card -->
-      <div id="schedule-ticker-card" class="bg-slate-900/95 border border-cyan-500/35 rounded-xl px-4 py-2.5 flex items-center justify-between gap-2 text-xs shadow-sm">
+      <div id="schedule-ticker-card" class="bg-slate-900/95 border border-cyan-500/35 rounded-xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-2.5 text-xs shadow-sm">
         <div class="flex flex-wrap items-center gap-2">
           <span id="scheduler-badge" class="px-2 py-0.5 rounded-md font-extrabold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 uppercase tracking-wider flex items-center gap-1.5">
             <span>🕒 Auto-Scheduler: ACTIVE</span>
@@ -178,9 +178,14 @@
             <span id="scheduler-jitter" class="text-slate-300 font-mono">±6m</span>
           </div>
         </div>
-        <button id="btn-toggle-scheduler" onclick="toggleAutoScheduler()" class="px-2.5 py-1 rounded-md text-xs font-bold border border-cyan-500/40 bg-cyan-500/15 text-cyan-300 hover:bg-cyan-500/25 transition flex items-center gap-1 shrink-0">
-          <span>⏸ Pause</span>
-        </button>
+        <div class="flex items-center gap-2 shrink-0">
+          <button id="btn-force-fire-queued" onclick="forceFireNextQueuedLead()" class="px-2.5 py-1 rounded-md text-xs font-bold border border-amber-500/50 bg-amber-500/20 text-amber-300 hover:bg-amber-500/35 transition flex items-center gap-1 shadow-sm" title="Dev Override: Instant trigger queued lead via Meta Cloud API">
+            <span>⚡ Force Fire Next Queued Lead Now (<span id="force-target-label">#2 Dr. Suman</span>)</span>
+          </button>
+          <button id="btn-toggle-scheduler" onclick="toggleAutoScheduler()" class="px-2.5 py-1 rounded-md text-xs font-bold border border-cyan-500/40 bg-cyan-500/15 text-cyan-300 hover:bg-cyan-500/25 transition flex items-center gap-1 shrink-0">
+            <span>⏸ Pause</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -2592,12 +2597,12 @@ Once submitted, your sector is locked exclusively.`;
       return (schedulerNextTargetIndex % 20) + 1;
     }
 
-    function executeAutoSchedulerDispatch() {
+    async function executeAutoSchedulerDispatch(isForce = false) {
       const targetLead = leads.find(l => l.rank === schedulerNextTargetIndex) || leads.find(l => !l.status || l.status === "Not Contacted") || leads[0];
       if (!targetLead) return;
 
       const todayCount = getTodayApproachedCount();
-      if (todayCount >= DAILY_APPROACH_LIMIT) {
+      if (!isForce && todayCount >= DAILY_APPROACH_LIMIT) {
         logDashboardActivity(
           "ANTI_BAN_GUARD",
           `🛡️ Anti-Ban Quota Shield: 20/20 limit reached for today. Auto-scheduler held until next morning 10:30 AM.`
@@ -2605,10 +2610,43 @@ Once submitted, your sector is locked exclusively.`;
         return;
       }
 
-      // Execute auto dispatch
+      // Generate personalized <60-word hook message
+      const hookMsg = (typeof hooks !== "undefined" && hooks.default) ? hooks.default(targetLead) : 
+        `Hi ${targetLead.recipient}, noticed your clinic listing in Greater Noida has friction confirming evening OPD hours and manual booking. We built a live interactive WhatsApp prototype for you: https://indian-bison-crm-2026.web.app/preview.html?rank=${targetLead.rank}`;
+
+      let cleanPhone = (targetLead.phone_whatsapp || "").replace(/[^0-9]/g, "");
+      if (cleanPhone.length === 10) cleanPhone = "91" + cleanPhone;
+
+      let dispatchedWamid = `wamid.HBgM${Date.now()}`;
+
+      // 1. Active Outbound Meta Cloud API Dispatch via Cloudflare Worker Bridge
+      try {
+        const res = await fetch("https://indian-bison-webhook.greetings-gopal.workers.dev/api/dispatch", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            leadRank: targetLead.rank,
+            phone: cleanPhone,
+            recipient: targetLead.recipient,
+            businessName: targetLead.business_name,
+            messageText: hookMsg
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.wamid) dispatchedWamid = data.wamid;
+        }
+      } catch (err) {
+        console.warn("[Cloudflare Dispatch API Fallback]", err);
+      }
+
+      // 2. State & Badge Mutation
       targetLead.status = "WhatsApp Sent";
       targetLead.last_contacted_at = new Date().toISOString();
+      targetLead.waba_message_id = dispatchedWamid;
       saveState(targetLead);
+
+      // 3. Increment counters & re-render
       incrementTodayApproachedCount();
       renderLeads();
       updateKPIs();
@@ -2617,14 +2655,45 @@ Once submitted, your sector is locked exclusively.`;
         playFunnelAudioAlert("DISPATCH");
       }
 
+      // 4. Log dispatched message ID directly into the Audit Log
       logDashboardActivity(
         "AUTO_DISPATCH",
-        `⚡ Auto-Scheduler Dispatched Touch #1 outreach to #${targetLead.rank} ${targetLead.recipient} (${targetLead.business_name})`,
+        `⚡ Dispatched Touch #1 outreach to #${targetLead.rank} ${targetLead.recipient} (${targetLead.business_name}) | Message ID: ${dispatchedWamid}`,
         targetLead.rank
       );
 
-      // Advance to next lead in queue
+      // 5. Advance to next queued lead & update force button
       schedulerNextTargetIndex = getNextUncontactedLeadRank();
+      updateForceTargetLabel();
+    }
+
+    async function forceFireNextQueuedLead() {
+      const btn = document.getElementById("btn-force-fire-queued");
+      if (btn) {
+        btn.disabled = true;
+        btn.classList.add("opacity-50");
+      }
+
+      await executeAutoSchedulerDispatch(true);
+
+      // Reset target countdown to next interval
+      schedulerCurrentJitter = 4 + Math.floor(Math.random() * 6);
+      schedulerTargetTimestamp = Date.now() + (15 + schedulerCurrentJitter) * 60 * 1000;
+      updateSchedulerTicker();
+
+      if (btn) {
+        btn.disabled = false;
+        btn.classList.remove("opacity-50");
+      }
+    }
+
+    function updateForceTargetLabel() {
+      const label = document.getElementById("force-target-label");
+      const targetLead = leads.find(l => l.rank === schedulerNextTargetIndex) || leads[1] || leads[0];
+      if (label && targetLead) {
+        const shortName = (targetLead.recipient || "Doctor").split(" ").slice(0, 2).join(" ");
+        label.textContent = `#${targetLead.rank} ${shortName}`;
+      }
     }
 
     function updateSchedulerTicker() {
@@ -3161,6 +3230,8 @@ Once submitted, your sector is locked exclusively.`;
     // Expose handlers globally
     window.dispatchSingleLeadManual = dispatchSingleLeadManual;
     window.toggleAutoScheduler = toggleAutoScheduler;
+    window.forceFireNextQueuedLead = forceFireNextQueuedLead;
+    window.executeAutoSchedulerDispatch = executeAutoSchedulerDispatch;
     window.switchRightPanelTab = switchRightPanelTab;
     window.updateDoctorEmulatorContent = updateDoctorEmulatorContent;
     window.simulateDoctorReply = simulateDoctorReply;

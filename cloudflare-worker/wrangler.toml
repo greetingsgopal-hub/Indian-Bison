@@ -3,6 +3,9 @@ main = "worker.js"
 compatibility_date = "2024-11-01"
 account_id = "04b586d238bb60304c8fc2501beaecf3"
 
+[triggers]
+crons = ["*/15 5-8,11-15 * * 1-6"]
+
 [vars]
 META_APP_ID = "1132938199519864"
 META_PHONE_NUMBER_ID = "587641237759145"
