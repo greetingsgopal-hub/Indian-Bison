@@ -354,7 +354,7 @@ app.post("/webhook/razorpay", async (req, res) => {
     const paymentEntity = payload?.payload?.payment?.entity || payload;
     const leadRank = Number(paymentEntity?.notes?.lead_rank || payload.lead_rank || 21);
     const paymentId = paymentEntity?.id || `pay_Rzp_${Date.now()}`;
-    const clinicName = paymentEntity?.notes?.clinic_name || "Apex Dental & Implant Studio (Live Trial)";
+    const clinicName = sanitizeClinicName(paymentEntity?.notes?.clinic_name || "Apex Dental & Implant Studio");
 
     await updateLeadRecord(leadRank, {
       status: "Booked",

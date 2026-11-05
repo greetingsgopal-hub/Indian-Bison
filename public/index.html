@@ -1540,7 +1540,7 @@
         rank: 21,
         urgency_tier: "Tier 1",
         urgency_score: 99,
-        business_name: "Apex Dental & Implant Studio (Live Trial • 6209228845)",
+        business_name: "Apex Dental & Implant Studio",
         recipient: "Dr. Gopal",
         sub_category: "Dental Implants, Painless RCT & Smile Design",
         locality: "Sector Alpha-1, Greater Noida",
@@ -1549,7 +1549,7 @@
         phone_whatsapp: "+916209228845",
         website_url: "MISSING_WEBSITE",
         operational_friction: true,
-        friction_details: "Live Funnel Trial (+916209228845): Missing self-serve WhatsApp booking link and evening OPD timing confirmation.",
+        friction_details: "Missing self-serve WhatsApp booking link and evening OPD timing confirmation.",
         recommended_pitch: "5-Page Mobile Clinic Website + 24/7 WhatsApp Slot Bot + 5-Star Rating Shield.",
         pain_short: "no website link and unconfirmed evening OPD slot timings",
         fix_short: "automated WhatsApp slot booking and a 5-star rating shield",
@@ -1574,18 +1574,20 @@
       return "₹" + Number(num || 0).toLocaleString("en-IN");
     }
 
-    // All 4 Cold Outreach Hooks + 4 No-Response Follow-Up Hooks strictly < 60 words!
+    // High-Converting Interactive Prototype Hooks strictly < 60 words!
     function buildHookVariants(lead) {
-      const sectorShort = (lead.locality || "Greater Noida").split(",")[0].trim();
+      const docName = sanitizeDoctorName(lead.recipient);
+      const clinicName = sanitizeClinicName(lead.business_name);
+      const sectorShort = (lead.locality || lead.address || "Greater Noida").split(",")[0].trim();
       return {
-        default: `Hey ${lead.recipient}, I looked up ${lead.business_name} on Google Maps today and noticed ${lead.pain_short}.\n\nI help Greater Noida dental clinics fix these exact leaks with ${lead.fix_short}.\n\nOpen to a quick 1-minute breakdown?\n(Reply STOP to opt out)`,
-        pain: `Hey ${lead.recipient}, ${lead.business_name}'s Google Maps profile shows ${lead.pain_short}, silently leaking walk-ins to nearby clinics.\n\nWe fix this exact bottleneck using ${lead.fix_short}.\n\nOpen to a 1-minute breakdown of how to plug this leak?\n(Reply STOP to opt out)`,
-        social: `Hey ${lead.recipient}, I noticed ${lead.business_name} on Google Maps has ${lead.pain_short}.\n\nThree Greater Noida dental clinics recently fixed this exact bottleneck with ${lead.fix_short} to double bookings.\n\nOpen to a 1-minute audio breakdown?\n(Reply STOP to opt out)`,
-        micro: `Hey ${lead.recipient}, while checking ${lead.business_name} on Google Maps, I spotted ${lead.pain_short}.\n\nInstead of pitching, I mocked up a free prototype showing how ${lead.fix_short} works for your clinic.\n\nMind if I send the preview link?\n(Reply STOP to opt out)`,
-        followup_day3: `Hey ${lead.recipient}, know you're busy chair-side at ${lead.business_name}.\n\nInstead of waiting, I built a 30-second live preview showing how ${sectorShort} patients book slots via WhatsApp using ${lead.fix_short}.\n\n1 single case covers it—want the preview link?\n(Reply STOP to opt out)`,
-        followup_day6: `Hi ${lead.recipient}, tested ${lead.business_name}'s Google listing like an evening patient in ${sectorShort}—spotted ${lead.pain_short}.\n\nNearby corporate chains capture those drop-offs automatically. We fix this in 5 days for ${formatINR(lead.setup_fee_inr)}.\n\nSend the 1-page breakdown?\n(Reply STOP to opt out)`,
-        followup_day10: `Hey ${lead.recipient}, last note from me! Since we only partner with ONE dental clinic per sector in ${sectorShort}, I'm reaching out to another clinic nearby tomorrow.\n\nBefore I close ${lead.business_name}'s file, want the preview link?\n(Reply STOP to opt out)`,
-        voice_note: `[🎙️ 35-SEC WHATSAPP VOICE NOTE SCRIPT — RECORD LIVE]\n"Hey ${lead.recipient}, Gopal here. Know you're between patients at ${lead.business_name} in ${sectorShort}, so I'll keep this to 25 seconds. I noticed ${lead.pain_short} on your Google listing. I built a quick demo showing how ${lead.fix_short} plugs that leak. Just reply 'LINK' and I'll text it over!"`
+        default: `Hey ${docName}, noticed patients searching ${clinicName} in ${sectorShort} find unconfirmed evening OPD timings and no direct booking link on your Google profile.\n\nBuilt a 30-second interactive prototype showing how a 24/7 WhatsApp booking slot & 5★ review shield fixes this.\n\nWant me to drop the preview link here?\n(Reply STOP to opt out)`,
+        pain: `Hey ${docName}, noticed patients searching ${clinicName} in ${sectorShort} find ${lead.pain_short || 'unconfirmed evening OPD hours'}.\n\nBuilt a 30-second interactive prototype showing how ${lead.fix_short || 'a 24/7 WhatsApp booking slot'} plugs this leak.\n\nWant me to drop the preview link here?\n(Reply STOP to opt out)`,
+        social: `Hey ${docName}, noticed patients searching ${clinicName} in ${sectorShort} find ${lead.pain_short || 'unconfirmed evening OPD timings'}.\n\nOther Greater Noida clinics deployed a 24/7 WhatsApp booking slot & 5★ review shield to double bookings.\n\nWant me to drop the preview link here?\n(Reply STOP to opt out)`,
+        micro: `Hey ${docName}, built a 30-second interactive prototype for ${clinicName} in ${sectorShort}.\n\nIt shows how a 24/7 WhatsApp OPD slot & review shield fixes unconfirmed evening timings.\n\nWant me to drop the preview link here?\n(Reply STOP to opt out)`,
+        followup_day3: `Hey ${docName}, know you're busy chair-side at ${clinicName}.\n\nInstead of waiting, I built a 30-second live prototype showing how ${sectorShort} patients book slots via WhatsApp.\n\nWant me to drop the preview link here?\n(Reply STOP to opt out)`,
+        followup_day6: `Hi ${docName}, tested ${clinicName}'s Google listing like an evening patient in ${sectorShort}—spotted unconfirmed OPD timings.\n\nBuilt a 30-second prototype showing how WhatsApp booking fixes this in 5 days.\n\nWant me to drop the preview link here?\n(Reply STOP to opt out)`,
+        followup_day10: `Hey ${docName}, last note from me! We partner with only ONE clinic per sector in ${sectorShort}.\n\nBefore I close ${clinicName}'s prototype slot, want me to drop the preview link here?\n(Reply STOP to opt out)`,
+        voice_note: `[🎙️ 35-SEC WHATSAPP VOICE NOTE SCRIPT — RECORD LIVE]\n"Hey ${docName}, Gopal here. Know you're between patients at ${clinicName} in ${sectorShort}, so I'll keep this to 25 seconds. I noticed unconfirmed evening OPD hours on your Google listing. I built a quick 30-sec demo showing how a WhatsApp booking slot plugs that leak. Just reply 'YES' and I'll text it over!"`
       };
     }
 
@@ -1672,9 +1674,16 @@
         pain_short: base.pain_short || l.pain_short,
         fix_short: base.fix_short || l.fix_short
       };
+      merged.business_name = sanitizeClinicName(merged.business_name);
+      merged.recipient = sanitizeDoctorName(merged.recipient);
       merged.hook_variants = buildHookVariants(merged);
       merged.whatsapp_quote_message = buildWhatsAppQuotation(merged);
-      if (!merged.custom_message || merged.custom_message.trim().split(/\s+/).length >= 60) {
+      if (!merged.custom_message || 
+          merged.custom_message.includes("Live Trial") || 
+          merged.custom_message.includes("1-minute breakdown") || 
+          merged.custom_message.includes("quick 1-minute") || 
+          merged.custom_message.includes("6209228845") || 
+          merged.custom_message.trim().split(/\s+/).length >= 60) {
         merged.custom_message = merged.hook_variants.default;
       }
       return merged;
@@ -1693,6 +1702,7 @@
       if (saved) {
         try {
           leads = JSON.parse(saved).map(enrichLeadWithDefaults);
+          localStorage.setItem("gn_dental_crm_v2", JSON.stringify(leads));
           return;
         } catch (e) {}
       }
@@ -2185,7 +2195,52 @@
 
       let cleanPhone = (lead.phone_whatsapp || "").replace(/[^0-9]/g, "");
       if (cleanPhone.length === 10) cleanPhone = "91" + cleanPhone;
-      const msg = encodeURIComponent(document.getElementById("inspector-message")?.value || "");
+
+      const cleanDoc = sanitizeDoctorName(lead.recipient);
+      const cleanClinic = sanitizeClinicName(lead.business_name);
+      const composerVal = document.getElementById("inspector-message")?.value || "";
+      const cleanMsg = (!composerVal || composerVal.includes("Live Trial") || composerVal.includes("1-minute breakdown") || composerVal.includes("Open to a quick"))
+        ? buildHighContextColdMessage(lead)
+        : composerVal;
+
+      // ⚡ Active Outbound Meta Cloud API Dispatch via Cloudflare Worker Bridge
+      try {
+        fetch("https://indian-bison-webhook.greetings-gopal.workers.dev/api/dispatch", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            leadRank: lead.rank,
+            phone: cleanPhone,
+            recipient: cleanDoc,
+            businessName: cleanClinic,
+            messageText: cleanMsg,
+            sendInteractive: true
+          })
+        }).then(res => res.json()).then(data => {
+          if (data && data.wamid) {
+            lead.waba_message_id = data.wamid;
+            saveState(lead);
+            logDashboardActivity(
+              "WABA_INTERACTIVE_DISPATCHED",
+              `✅ Meta Interactive Template delivered to ${cleanClinic} (${cleanPhone}) [${data.wamid}]`,
+              lead.rank
+            );
+          }
+        }).catch(err => console.warn("Cloudflare dispatch notice:", err));
+      } catch (err) {
+        console.warn("Cloudflare bridge dispatch error:", err);
+      }
+
+      // Also notify local listener if active
+      try {
+        fetch("http://localhost:3000/api/dispatch-manual", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ leadId: lead.rank, lead, customHookText: cleanMsg })
+        }).catch(() => {});
+      } catch (e) {}
+
+      const msg = encodeURIComponent(cleanMsg);
       const waUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${msg}`;
 
       // Update button href directly
@@ -2920,7 +2975,15 @@ Once submitted, your sector is locked exclusively.`;
       }
 
       selectLead(rank);
-      const hookMsg = document.getElementById("inspector-message")?.value || hooks.default(lead);
+      const cleanDoc = sanitizeDoctorName(lead.recipient);
+      const cleanClinic = sanitizeClinicName(lead.business_name);
+      const composerVal = document.getElementById("inspector-message")?.value || "";
+      const hookMsg = (!composerVal || composerVal.includes("Live Trial") || composerVal.includes("1-minute breakdown") || composerVal.includes("Open to a quick"))
+        ? buildHighContextColdMessage(lead)
+        : composerVal;
+
+      let cleanPhone = (lead.phone_whatsapp || "").replace(/[^0-9]/g, "");
+      if (cleanPhone.length === 10) cleanPhone = "91" + cleanPhone;
 
       lead.status = "WhatsApp Sent";
       lead.last_contacted_at = new Date().toISOString();
@@ -2928,6 +2991,27 @@ Once submitted, your sector is locked exclusively.`;
       saveState(lead);
       incrementTodayApproachedCount();
       renderLeads();
+
+      // ⚡ Direct Cloudflare Worker Dispatch (Meta Interactive Button Template)
+      try {
+        fetch("https://indian-bison-webhook.greetings-gopal.workers.dev/api/dispatch", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            leadRank: lead.rank,
+            phone: cleanPhone,
+            recipient: cleanDoc,
+            businessName: cleanClinic,
+            messageText: hookMsg,
+            sendInteractive: true
+          })
+        }).then(res => res.json()).then(data => {
+          if (data && data.wamid) {
+            lead.waba_message_id = data.wamid;
+            saveState(lead);
+          }
+        }).catch(() => {});
+      } catch (e) {}
 
       try {
         fetch("http://localhost:3000/api/dispatch-manual", {
@@ -2939,12 +3023,10 @@ Once submitted, your sector is locked exclusively.`;
 
       logDashboardActivity(
         "MANUAL_DISPATCH",
-        `⚡ Instant Dispatch executed for #${lead.rank} ${lead.business_name} (${lead.phone_whatsapp}) • Status -> WhatsApp Sent`,
+        `⚡ Instant Dispatch executed for #${lead.rank} ${cleanClinic} (${cleanPhone}) • Status -> WhatsApp Sent`,
         lead.rank
       );
 
-      let cleanPhone = (lead.phone_whatsapp || "").replace(/[^0-9]/g, "");
-      if (cleanPhone.length === 10) cleanPhone = "91" + cleanPhone;
       const waUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(hookMsg)}`;
       const win = window.open(waUrl, "_blank");
       if (!win || win.closed || typeof win.closed === "undefined") {

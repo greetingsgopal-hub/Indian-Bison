@@ -44,6 +44,14 @@ function sanitizeDoctorName(name) {
   return clean;
 }
 
+function buildHighContextColdMessage(lead) {
+  if (!lead) return "";
+  const docName = sanitizeDoctorName(lead.recipient);
+  const clinicName = sanitizeClinicName(lead.business_name);
+  const sector = (lead.locality || lead.address || "Greater Noida").split(",")[0].trim();
+  return `Hey ${docName}, noticed patients searching ${clinicName} in ${sector} find unconfirmed evening OPD timings and no direct booking link on your Google profile.\n\nBuilt a 30-second interactive prototype showing how a 24/7 WhatsApp booking slot & 5★ review shield fixes this.\n\nWant me to drop the preview link here?\n(Reply STOP to opt out)`;
+}
+
 function toFirestoreValue(val) {
   if (typeof val === "string") return { stringValue: val };
   if (typeof val === "boolean") return { booleanValue: val };
@@ -224,5 +232,6 @@ module.exports = {
   getAllLeads,
   findLeadByPhone,
   sanitizeClinicName,
-  sanitizeDoctorName
+  sanitizeDoctorName,
+  buildHighContextColdMessage
 };
